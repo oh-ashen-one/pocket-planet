@@ -1,0 +1,72 @@
+{
+  "source": "blender_authored_pip",
+  "height_m": 1.057,
+  "width_m": 1.0472,
+  "depth_m": 0.597,
+  "min_z": 0.0,
+  "vertices": 6220,
+  "triangles": 12252,
+  "bones": 22,
+  "clips": {
+    "Idle": {
+      "frames": 60,
+      "seconds": 2.0,
+      "loop": true
+    },
+    "Walk": {
+      "frames": 30,
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Run": {
+      "frames": 20,
+      "seconds": 0.667,
+      "loop": true
+    },
+    "Turn": {
+      "frames": 18,
+      "seconds": 0.6,
+      "loop": false
+    },
+    "Jump": {
+      "frames": 20,
+      "seconds": 0.667,
+      "loop": false
+    },
+    "Fall": {
+      "frames": 24,
+      "seconds": 0.8,
+      "loop": true
+    },
+    "Landing": {
+      "frames": 16,
+      "seconds": 0.533,
+      "loop": false
+    },
+    "Pickup": {
+      "frames": 22,
+      "seconds": 0.733,
+      "loop": false
+    },
+    "Carry": {
+      "frames": 30,
+      "seconds": 1.0,
+      "loop": true
+    },
+    "Throw": {
+      "frames": 20,
+      "seconds": 0.667,
+      "loop": false
+    },
+    "Interact": {
+      "frames": 24,
+      "seconds": 0.8,
+      "loop": false
+    },
+    "Celebrate": {
+      "frames": 45,
+      "seconds": 1.5,
+      "loop": true
+    }
+  }
+}
