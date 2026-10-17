@@ -1,0 +1,20 @@
+{
+  "workflowId": "c16a4ff6-58f4-4156-8cff-5a9ae5551ec8",
+  "canvasUrl": "https://customuse.com/workflow/c16a4ff6-58f4-4156-8cff-5a9ae5551ec8",
+  "balanceVerifiedBefore": 2876,
+  "creditsSpentSoFar": 0,
+  "uploads": {
+    "pip_front": "f54f511c-9b29-4812-8b9f-7371211dc0ee",
+    "pip_side": "c4578776-82be-41c8-a9b0-4053e1dc2fd6",
+    "pip_back": "75b9b3ab-321e-4272-a1db-f60b2fa0cc08",
+    "bloop": "648cf298-7768-4719-97a2-f8786d80dc9c",
+    "spaceship": "8c5d92a6-841e-48ab-8bf2-789ec999c52b",
+    "bloom_plant": "4d905d67-2d23-4ef8-9085-5317e3d65d62"
+  },
+  "stagedNodes": {
+    "pip_3d": "c3394202-10bc-406b-80d9-a002b17e3d42",
+    "bloop_3d": "1ebf94ae-f730-4246-a1e3-64307ab4a11b",
+    "spaceship_3d": "540baa10-d7f6-4600-9fb8-9cd8b800eead",
+    "bloom_plant_3d": "eca42de4-3e04-47ee-8a4e-8acc7e54c43f"
+  }
+}
