@@ -1,14 +1,14 @@
 {
-  "mode": "full",
-  "samples": 877,
+  "mode": "perf",
+  "samples": 1026,
   "resolution": "1280x720",
   "qualityLevel": "Ultra",
-  "avgFrameTimeMs": 20.12,
-  "avgFps": 49.7,
-  "p50FrameTimeMs": 16.67,
-  "p95FrameTimeMs": 33.33,
-  "p99FrameTimeMs": 33.55,
-  "onePercentLowFps": 29.8,
+  "avgFrameTimeMs": 17.04,
+  "avgFps": 58.7,
+  "p50FrameTimeMs": 16.69,
+  "p95FrameTimeMs": 17.58,
+  "p99FrameTimeMs": 19.18,
+  "onePercentLowFps": 52.1,
   "collectedSeeds": 3,
   "shipRepaired": true
 }

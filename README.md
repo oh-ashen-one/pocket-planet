@@ -155,8 +155,8 @@ Measured via [`PlaytestVerificationHarness.cs`](Assets/PocketPlanet/Scripts/Play
 
 | Benchmark Mode | Samples | Resolution & Quality | Average FPS | Median (`p50`) Frame Time | `p95` Frame Time | `1% Low` FPS (`p99`) | JSON Report |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Gameplay Benchmark (`perf` clean pass, no disk frame-dump)** | 252 frames | `1280x720` (`Ultra`) | **56.9 FPS** (`17.56 ms`) | **16.67 ms** (`60.0 FPS`) | **16.71 ms** (`59.8 FPS`) | **30.2 FPS** (`33.09 ms`) | [`perf_milestone1.json`](docs/screenshots/milestone1/perf_milestone1.json) |
-| **Full 3-Seed Adventure + Live 15 fps PNG Video Frame Encoding** | 877 frames | `1280x720` (`Ultra`) | **49.7 FPS** (`20.12 ms`) | **16.67 ms** (`60.0 FPS`) | **33.33 ms** (`30.0 FPS`) | **29.8 FPS** (`33.55 ms`) | [`perf_full.json`](docs/screenshots/gameplay/perf_full.json) |
+| **Full 3-Seed Adventure (`gpu_slot.sh perf` clean pass, no disk frame-dump)** | 1,026 frames | `1280x720` (`Ultra`) | **58.7 FPS** (`17.04 ms`) | **16.69 ms** (`59.9 FPS`) | **17.58 ms** (`56.9 FPS`) | **52.1 FPS** (`19.18 ms`) | [`perf_full.json`](docs/screenshots/gameplay/perf_full.json) |
+| **Milestone 1 Locomotion Pass (`milestone1`)** | 252 frames | `1280x720` (`Ultra`) | **56.9 FPS** (`17.56 ms`) | **16.67 ms** (`60.0 FPS`) | **16.71 ms** (`59.8 FPS`) | **30.2 FPS** (`33.09 ms`) | [`perf_milestone1.json`](docs/screenshots/milestone1/perf_milestone1.json) |
 
 ---
 

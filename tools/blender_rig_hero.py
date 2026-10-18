@@ -549,7 +549,7 @@ def author_all_animations(rig):
         actions[name] = (act, end_frame, loop)
         return act
 
-    # 1. Idle (60 frames, 2.0s loop): breathing, relaxed arms down from A-pose, antenna bob
+    # 1. Idle (60 frames, 2.0s loop): breathing, relaxed arms down at sides, antenna bob
     new_clip("Idle", 60, True)
     for f in range(0, 61, 5):
         reset_pose(rig)
@@ -559,11 +559,11 @@ def author_all_animations(rig):
         set_loc(rig, "Hips", x=0.012 * sway, y=-0.015 * abs(breath), z=0.0)
         set_rot(rig, "Spine", rx=2.5 * breath, rz=2.0 * sway)
         set_rot(rig, "Head", rx=-3.0 * breath, ry=-3.5 * sway, rz=-2.5 * sway)
-        # Relax arms from A-pose toward sides
-        set_rot(rig, "UpperArmL", ry=22.0 + 3.0 * breath, rz=6.0 * sway)
-        set_rot(rig, "UpperArmR", ry=-22.0 - 3.0 * breath, rz=6.0 * sway)
-        set_rot(rig, "LowerArmL", rx=14.0, ry=8.0)
-        set_rot(rig, "LowerArmR", rx=14.0, ry=-8.0)
+        # Relax arms down from A-pose to natural sides (hands at x=+-0.26, z=0.21)
+        set_rot(rig, "UpperArmL", rx=-32.5 + 2.0 * breath, ry=-7.8, rz=-22.6 + 3.0 * sway)
+        set_rot(rig, "UpperArmR", rx=-32.5 + 2.0 * breath, ry=7.8, rz=22.6 + 3.0 * sway)
+        set_rot(rig, "LowerArmL", rx=-10.0, rz=8.0)
+        set_rot(rig, "LowerArmR", rx=-10.0, rz=-8.0)
         # Floppy antennae delayed bob
         ant = math.sin(ph - 0.7)
         set_rot(rig, "AntennaL_1", rx=6.0 * ant, rz=5.0 * sway)
@@ -585,18 +585,20 @@ def author_all_animations(rig):
         set_rot(rig, "Hips", rx=4.0, ry=6.0 * s, rz=-4.0 * s)
         set_rot(rig, "Spine", rx=5.0 + 3.0 * bob, ry=-8.0 * s)
         set_rot(rig, "Head", rx=-4.0, ry=4.0 * s, rz=3.0 * s)
-        # Legs swing along X rotation (forward is -Y, so -rx swings leg forward!)
+        # Legs swing along X rotation (forward is -Y, so -rx swings leg forward)
         set_rot(rig, "UpperLegL", rx=-34.0 * s)
         set_rot(rig, "LowerLegL", rx=max(0.0, 28.0 * c))
         set_rot(rig, "FootL", rx=12.0 * s)
         set_rot(rig, "UpperLegR", rx=34.0 * s)
         set_rot(rig, "LowerLegR", rx=max(0.0, -28.0 * c))
         set_rot(rig, "FootR", rx=-12.0 * s)
-        # Counter-swing arms
-        set_rot(rig, "UpperArmL", rx=26.0 * s, ry=20.0)
-        set_rot(rig, "LowerArmL", rx=18.0 + 10.0 * s)
-        set_rot(rig, "UpperArmR", rx=-26.0 * s, ry=-20.0)
-        set_rot(rig, "LowerArmR", rx=18.0 - 10.0 * s)
+        # Counter-swing arms beside body (when Left Leg is forward s=+1, Left Arm swings back a_l=-1, Right Arm forward a_r=+1)
+        a_l = -s
+        a_r = s
+        set_rot(rig, "UpperArmL", rx=-22.6 - 24.5 * a_l, ry=2.2 + 5.2 * a_l, rz=-21.7 + 34.7 * a_l)
+        set_rot(rig, "LowerArmL", rx=-16.0 - 10.0 * max(0.0, a_l), rz=8.0)
+        set_rot(rig, "UpperArmR", rx=-22.6 - 24.5 * a_r, ry=-2.2 - 5.2 * a_r, rz=21.7 - 34.7 * a_r)
+        set_rot(rig, "LowerArmR", rx=-16.0 - 10.0 * max(0.0, a_r), rz=-8.0)
         # Secondary motion on antennae and backpack
         b_lag = math.sin(ph * 2.0 - 0.6)
         set_rot(rig, "AntennaL_1", rx=10.0 + 12.0 * b_lag, rz=-6.0 * s)
@@ -624,10 +626,12 @@ def author_all_animations(rig):
         set_rot(rig, "UpperLegR", rx=52.0 * s)
         set_rot(rig, "LowerLegR", rx=max(0.0, -46.0 * c) + 8.0)
         set_rot(rig, "FootR", rx=-18.0 * s)
-        set_rot(rig, "UpperArmL", rx=44.0 * s, ry=14.0)
-        set_rot(rig, "LowerArmL", rx=38.0 + 14.0 * s)
-        set_rot(rig, "UpperArmR", rx=-44.0 * s, ry=-14.0)
-        set_rot(rig, "LowerArmR", rx=38.0 - 14.0 * s)
+        a_l = -s
+        a_r = s
+        set_rot(rig, "UpperArmL", rx=-24.0 - 28.0 * a_l, ry=2.2 + 6.5 * a_l, rz=-16.0 + 38.0 * a_l)
+        set_rot(rig, "LowerArmL", rx=-28.0 - 12.0 * a_l, rz=10.0)
+        set_rot(rig, "UpperArmR", rx=-24.0 - 28.0 * a_r, ry=-2.2 - 6.5 * a_r, rz=16.0 - 38.0 * a_r)
+        set_rot(rig, "LowerArmR", rx=-28.0 - 12.0 * a_r, rz=-10.0)
         # Antennae trail backward in the wind
         set_rot(rig, "AntennaL_1", rx=24.0 + 14.0 * bob, rz=-8.0 * s)
         set_rot(rig, "AntennaL_2", rx=30.0 + 18.0 * bob, rz=-12.0 * s)
@@ -638,19 +642,19 @@ def author_all_animations(rig):
 
     # 4. Turn (18 frames, 0.6s): playful pivot step with anticipation & follow-through
     new_clip("Turn", 18, False)
-    for f, (hip_y, yaw, arm_open, leg_l, leg_r, ant_rz) in [
-        (0, (0.0, 0.0, 20.0, 0.0, 0.0, 0.0)),
-        (5, (-0.04, -18.0, 8.0, -24.0, 14.0, 18.0)),
-        (11, (0.03, 14.0, 12.0, 18.0, -26.0, -22.0)),
-        (18, (0.0, 0.0, 22.0, 0.0, 0.0, 0.0)),
+    for f, (hip_y, yaw, arm_rz, leg_l, leg_r, ant_rz) in [
+        (0, (0.0, 0.0, 22.6, 0.0, 0.0, 0.0)),
+        (5, (-0.04, -18.0, 12.0, -24.0, 14.0, 18.0)),
+        (11, (0.03, 14.0, 15.0, 18.0, -26.0, -22.0)),
+        (18, (0.0, 0.0, 22.6, 0.0, 0.0, 0.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hip_y)
         set_rot(rig, "Hips", ry=yaw)
         set_rot(rig, "Spine", ry=yaw * 0.6)
         set_rot(rig, "Head", ry=-yaw * 0.5)
-        set_rot(rig, "UpperArmL", ry=arm_open)
-        set_rot(rig, "UpperArmR", ry=-arm_open)
+        set_rot(rig, "UpperArmL", rx=-32.5, ry=-7.8, rz=-arm_rz)
+        set_rot(rig, "UpperArmR", rx=-32.5, ry=7.8, rz=arm_rz)
         set_rot(rig, "UpperLegL", rx=leg_l)
         set_rot(rig, "UpperLegR", rx=leg_r)
         set_rot(rig, "AntennaL_1", rz=ant_rz)
@@ -659,19 +663,19 @@ def author_all_animations(rig):
         set_rot(rig, "AntennaR_2", rz=ant_rz * 1.4)
         key_all(rig, f)
 
-    # 5. Jump (20 frames, 0.67s): anticipation squash crouch -> upward stretch launch -> apex pose
+    # 5. Jump (20 frames, 0.67s): anticipation squash crouch -> upward stretch launch -> joyful overhead V-pose
     new_clip("Jump", 20, False)
-    for f, (hy, spine_rx, arm_rz, leg_l, leg_r, ant_rx) in [
-        (0, (-0.06, 14.0, -18.0, -26.0, -26.0, -14.0)),
-        (4, (0.05, -10.0, 48.0, 20.0, -30.0, 26.0)),
-        (11, (0.08, -6.0, 56.0, -30.0, 24.0, 32.0)),
-        (20, (0.06, 0.0, 44.0, -22.0, 16.0, 20.0)),
+    for f, (hy, spine_rx, arm_rx, arm_ry, arm_rz, leg_l, leg_r, ant_rx) in [
+        (0, (-0.06, 14.0, 1.8, -2.9, -56.4, -26.0, -26.0, -14.0)),
+        (4, (0.05, -10.0, 28.0, -28.0, 88.0, 20.0, -30.0, 26.0)),
+        (11, (0.08, -6.0, 33.0, -32.3, 98.0, -30.0, 24.0, 32.0)),
+        (20, (0.06, 0.0, 26.0, -26.0, 82.0, -22.0, 16.0, 20.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
         set_rot(rig, "Spine", rx=spine_rx)
-        set_rot(rig, "UpperArmL", rz=arm_rz, rx=18.0)
-        set_rot(rig, "UpperArmR", rz=-arm_rz, rx=18.0)
+        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry, rz=arm_rz)
+        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry, rz=-arm_rz)
         set_rot(rig, "UpperLegL", rx=leg_l)
         set_rot(rig, "LowerLegL", rx=24.0)
         set_rot(rig, "UpperLegR", rx=leg_r)
@@ -691,8 +695,8 @@ def author_all_animations(rig):
         s = math.sin(ph)
         set_rot(rig, "Spine", rx=-8.0, rz=4.0 * s)
         set_rot(rig, "Head", rx=12.0)
-        set_rot(rig, "UpperArmL", rz=38.0 + 10.0 * s, rx=15.0 * s)
-        set_rot(rig, "UpperArmR", rz=-38.0 + 10.0 * s, rx=-15.0 * s)
+        set_rot(rig, "UpperArmL", rx=18.0 + 8.0 * s, ry=-20.0, rz=64.0 + 12.0 * s)
+        set_rot(rig, "UpperArmR", rx=18.0 - 8.0 * s, ry=20.0, rz=-64.0 + 12.0 * s)
         set_rot(rig, "UpperLegL", rx=-22.0 + 16.0 * s)
         set_rot(rig, "LowerLegL", rx=32.0)
         set_rot(rig, "UpperLegR", rx=-22.0 - 16.0 * s)
@@ -704,13 +708,13 @@ def author_all_animations(rig):
         set_rot(rig, "Backpack", rx=-10.0)
         key_all(rig, f)
 
-    # 7. Landing (16 frames, 0.53s): visible squash absorption -> recoil overshoot -> settle
+    # 7. Landing (16 frames, 0.53s): visible squash absorption -> recoil overshoot -> settle to relaxed Idle
     new_clip("Landing", 16, False)
-    for f, (hy, spine_rx, knee_rx, arm_ry, ant_rx) in [
-        (0, (0.02, -6.0, 16.0, -18.0, -18.0)),
-        (4, (-0.08, 18.0, 38.0, 24.0, 28.0)),
-        (10, (0.02, -4.0, 10.0, 18.0, -10.0)),
-        (16, (0.0, 0.0, 0.0, 22.0, 0.0)),
+    for f, (hy, spine_rx, knee_rx, arm_rx, arm_ry, arm_rz, ant_rx) in [
+        (0, (0.02, -6.0, 16.0, 12.0, -14.0, 42.0, -18.0)),
+        (4, (-0.08, 18.0, 38.0, -38.0, 4.0, -8.0, 28.0)),
+        (10, (0.02, -4.0, 10.0, -30.0, -6.0, -18.0, -10.0)),
+        (16, (0.0, 0.0, 0.0, -32.5, -7.8, -22.6, 0.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
@@ -719,8 +723,8 @@ def author_all_animations(rig):
         set_rot(rig, "LowerLegL", rx=knee_rx)
         set_rot(rig, "UpperLegR", rx=-knee_rx * 0.7)
         set_rot(rig, "LowerLegR", rx=knee_rx)
-        set_rot(rig, "UpperArmL", ry=arm_ry)
-        set_rot(rig, "UpperArmR", ry=-arm_ry)
+        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry, rz=arm_rz)
+        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry, rz=-arm_rz)
         set_rot(rig, "AntennaL_1", rx=ant_rx)
         set_rot(rig, "AntennaL_2", rx=ant_rx * 1.3)
         set_rot(rig, "AntennaR_1", rx=ant_rx)
@@ -730,20 +734,20 @@ def author_all_animations(rig):
 
     # 8. Pickup (22 frames, 0.73s): bend down, reach both hands forward to meet oversized fruit, lift to chest
     new_clip("Pickup", 22, False)
-    for f, (hy, spine_rx, arm_rx, arm_rz, elbow_rx) in [
-        (0, (0.0, 0.0, 0.0, 0.0, 14.0)),
-        (8, (-0.08, 28.0, -52.0, 22.0, 24.0)),
-        (15, (-0.03, 10.0, -58.0, 28.0, 34.0)),
-        (22, (-0.02, -10.0, -54.0, 26.0, 36.0)),
+    for f, (hy, spine_rx, arm_rx, arm_ry, arm_rz, elbow_rx) in [
+        (0, (0.0, 0.0, -32.5, -7.8, -22.6, -10.0)),
+        (8, (-0.08, 28.0, -63.7, 2.0, 1.5, -18.0)),
+        (15, (-0.03, 8.0, -68.0, 16.0, 18.0, -22.0)),
+        (22, (-0.02, -10.0, -70.4, 21.3, 25.0, -18.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Head", rx=-spine_rx * 0.5)
-        set_rot(rig, "UpperArmL", rx=arm_rx, rz=arm_rz)
-        set_rot(rig, "LowerArmL", rx=elbow_rx, rz=18.0)
-        set_rot(rig, "UpperArmR", rx=arm_rx, rz=-arm_rz)
-        set_rot(rig, "LowerArmR", rx=elbow_rx, rz=-18.0)
+        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry, rz=arm_rz)
+        set_rot(rig, "LowerArmL", rx=elbow_rx, rz=16.0)
+        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry, rz=-arm_rz)
+        set_rot(rig, "LowerArmR", rx=elbow_rx, rz=-16.0)
         set_rot(rig, "UpperLegL", rx=-abs(hy) * 220.0)
         set_rot(rig, "LowerLegL", rx=abs(hy) * 320.0)
         set_rot(rig, "UpperLegR", rx=-abs(hy) * 220.0)
@@ -764,12 +768,12 @@ def author_all_animations(rig):
         set_rot(rig, "Spine", rx=-12.0 + 3.0 * bob, rz=-4.0 * s)
         set_rot(rig, "Chest", rx=-6.0)
         set_rot(rig, "Head", rx=14.0, rz=4.0 * s)
-        # Both arms forward & inward so hands meet the oversized fruit in front of chest
-        set_rot(rig, "UpperArmL", rx=-54.0 + 3.0 * bob, rz=26.0)
-        set_rot(rig, "LowerArmL", rx=-28.0, rz=20.0)
+        # Both arms forward & inward (hands at x=+-0.098, y=-0.357, z=0.465 cradling the Starberry)
+        set_rot(rig, "UpperArmL", rx=-70.4 + 3.0 * bob, ry=21.3, rz=25.0)
+        set_rot(rig, "LowerArmL", rx=-18.0, rz=16.0)
         set_rot(rig, "HandL", rz=15.0)
-        set_rot(rig, "UpperArmR", rx=-54.0 + 3.0 * bob, rz=-26.0)
-        set_rot(rig, "LowerArmR", rx=-28.0, rz=-20.0)
+        set_rot(rig, "UpperArmR", rx=-70.4 + 3.0 * bob, ry=-21.3, rz=-25.0)
+        set_rot(rig, "LowerArmR", rx=-18.0, rz=-16.0)
         set_rot(rig, "HandR", rz=-15.0)
         # Shorter, wider-legged weighted stride
         set_rot(rig, "UpperLegL", rx=-26.0 * s - 10.0)
@@ -784,18 +788,18 @@ def author_all_animations(rig):
 
     # 10. Throw (20 frames, 0.67s): wind-up lean back -> energetic forward hurl + follow-through
     new_clip("Throw", 20, False)
-    for f, (spine_rx, arm_rx, arm_rz, ant_rx) in [
-        (0, (-14.0, -54.0, 26.0, -14.0)),
-        (5, (-24.0, -68.0, 38.0, -26.0)),
-        (11, (26.0, -32.0, 12.0, 34.0)),
-        (20, (0.0, 0.0, 0.0, 0.0)),
+    for f, (spine_rx, arm_rx, arm_ry, arm_rz, ant_rx) in [
+        (0, (-14.0, -70.4, 21.3, 25.0, -14.0)),
+        (5, (-24.0, -76.0, 24.0, 32.0, -26.0)),
+        (11, (26.0, -48.0, 8.0, 14.0, 34.0)),
+        (20, (0.0, -32.5, -7.8, -22.6, 0.0)),
     ]:
         reset_pose(rig)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Chest", rx=spine_rx * 0.5)
         set_rot(rig, "Head", rx=-spine_rx * 0.4)
-        set_rot(rig, "UpperArmL", rx=arm_rx, rz=arm_rz)
-        set_rot(rig, "UpperArmR", rx=arm_rx, rz=-arm_rz)
+        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry, rz=arm_rz)
+        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry, rz=-arm_rz)
         set_rot(rig, "AntennaL_1", rx=ant_rx)
         set_rot(rig, "AntennaL_2", rx=ant_rx * 1.3)
         set_rot(rig, "AntennaR_1", rx=ant_rx)
@@ -804,24 +808,24 @@ def author_all_animations(rig):
 
     # 11. Interact (24 frames, 0.8s): friendly reach / pet / lever pull gesture
     new_clip("Interact", 24, False)
-    for f, (spine_rx, r_arm_rx, r_arm_rz, l_arm_rz, head_rz) in [
-        (0, (0.0, 0.0, 0.0, 0.0, 0.0)),
-        (7, (14.0, -58.0, -28.0, -10.0, 8.0)),
-        (13, (12.0, -46.0, -20.0, -10.0, -8.0)),
-        (18, (14.0, -58.0, -28.0, -10.0, 6.0)),
-        (24, (0.0, 0.0, 0.0, 0.0, 0.0)),
+    for f, (spine_rx, r_arm_rx, r_arm_ry, r_arm_rz, head_rz) in [
+        (0, (0.0, -32.5, 7.8, 22.6, 0.0)),
+        (7, (14.0, -62.0, -14.0, -18.0, 8.0)),
+        (13, (12.0, -52.0, -10.0, -12.0, -8.0)),
+        (18, (14.0, -62.0, -14.0, -18.0, 6.0)),
+        (24, (0.0, -32.5, 7.8, 22.6, 0.0)),
     ]:
         reset_pose(rig)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Head", rz=head_rz, rx=-spine_rx * 0.3)
-        set_rot(rig, "UpperArmR", rx=r_arm_rx, rz=r_arm_rz)
-        set_rot(rig, "LowerArmR", rx=-24.0)
-        set_rot(rig, "UpperArmL", rz=l_arm_rz)
+        set_rot(rig, "UpperArmR", rx=r_arm_rx, ry=r_arm_ry, rz=r_arm_rz)
+        set_rot(rig, "LowerArmR", rx=-18.0)
+        set_rot(rig, "UpperArmL", rx=-32.5, ry=-7.8, rz=-22.6)
         set_rot(rig, "AntennaL_1", rz=head_rz * 1.4)
         set_rot(rig, "AntennaR_1", rz=head_rz * 1.4)
         key_all(rig, f)
 
-    # 12. Celebrate (45 frames, 1.5s loop): happy bounce, arms raised waving, joyful antenna wiggle
+    # 12. Celebrate (45 frames, 1.5s loop): happy bounce, arms raised high overhead waving, joyful antenna wiggle
     new_clip("Celebrate", 45, True)
     for f in range(0, 46, 3):
         reset_pose(rig)
@@ -833,11 +837,11 @@ def author_all_animations(rig):
         set_rot(rig, "Hips", ry=16.0 * math.sin(ph), rz=6.0 * s)
         set_rot(rig, "Spine", rx=-6.0 * hop, rz=5.0 * s)
         set_rot(rig, "Head", rz=-8.0 * s, rx=-6.0)
-        # Raised cheering arms (rz+54 on L, rz-54 on R lifts hands high up!)
-        set_rot(rig, "UpperArmL", rz=54.0 + 12.0 * s, rx=22.0)
-        set_rot(rig, "LowerArmL", rz=18.0 * c)
-        set_rot(rig, "UpperArmR", rz=-54.0 + 12.0 * s, rx=22.0)
-        set_rot(rig, "LowerArmR", rz=-18.0 * c)
+        # Raised cheering arms high above head (hands at z=+0.98m)
+        set_rot(rig, "UpperArmL", rx=33.0, ry=-32.3, rz=96.0 + 10.0 * s)
+        set_rot(rig, "LowerArmL", rz=14.0 * c)
+        set_rot(rig, "UpperArmR", rx=33.0, ry=32.3, rz=-96.0 + 10.0 * s)
+        set_rot(rig, "LowerArmR", rz=-14.0 * c)
         set_rot(rig, "UpperLegL", rx=-22.0 * hop, rz=-6.0 * hop)
         set_rot(rig, "LowerLegL", rx=28.0 * hop)
         set_rot(rig, "UpperLegR", rx=-22.0 * hop, rz=6.0 * hop)

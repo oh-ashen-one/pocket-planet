@@ -213,6 +213,8 @@ namespace PocketPlanet
                 yield return MoveTowardPoint(hungryPlant.transform.position + new Vector3(1.8f, 0f, 0f), false, 2.0f, 1.4f);
                 hungryPlant.OnInteract(player);
                 yield return new WaitForSeconds(1.45f);
+                if (hungryPlant.rewardSeed != null)
+                    hungryPlant.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
                 SaveShot("04_hungry_plant_blooms_seed1.png");
 
                 // Collect Star Seed #1
@@ -253,6 +255,8 @@ namespace PocketPlanet
                 player.TeleportTo(new Vector3(11.4f, 0.05f, 9.2f), Quaternion.Euler(0f, 18f, 0f));
                 SetCameraOrbit(14f, 22f, 5.2f);
                 yield return new WaitForSeconds(0.45f);
+                if (slopeBoulder.rewardSeed != null)
+                    slopeBoulder.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
                 SaveShot("06_boulder_slope_domino_topple.png");
                 if (slopeBoulder.rewardSeed != null)
                 {
@@ -276,11 +280,17 @@ namespace PocketPlanet
             // Shot 7: Cross bridge to Alien Pod Village, pet Friendly Alien Bloop & collect Star Seed #3!
             if (friendlyBloop != null)
             {
-                player.TeleportTo(friendlyBloop.transform.position - Vector3.forward * 1.35f, Quaternion.identity);
-                SetCameraOrbit(14f, 18f, 4.2f);
+                Vector3 bloopBase = friendlyBloop.transform.position;
+                player.TeleportTo(bloopBase + new Vector3(-0.72f, 0f, -0.55f), Quaternion.Euler(0f, 52f, 0f));
+                friendlyBloop.transform.rotation = Quaternion.Euler(0f, -155f, 0f);
+                SetCameraOrbit(8f, 18f, 4.2f);
                 yield return new WaitForSeconds(0.2f);
                 friendlyBloop.OnInteract(player);
                 yield return new WaitForSeconds(0.55f);
+                player.TeleportTo(bloopBase + new Vector3(-0.72f, 0f, -0.55f), Quaternion.Euler(0f, 52f, 0f));
+                friendlyBloop.transform.SetPositionAndRotation(bloopBase + new Vector3(0.32f, 0f, 0.1f), Quaternion.Euler(0f, -155f, 0f));
+                if (friendlyBloop.rewardSeed != null)
+                    friendlyBloop.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
                 SaveShot("08_pet_friendly_bloop_seed3.png");
                 if (friendlyBloop.rewardSeed != null && !friendlyBloop.rewardSeed.IsCollected)
                 {

@@ -26,6 +26,8 @@ namespace PocketPlanet
             }
         }
 
+        private Transform _celebrationCrown;
+
         private void Update()
         {
             _wobbleTime += Time.deltaTime;
@@ -41,6 +43,11 @@ namespace PocketPlanet
                 float hover = Mathf.Sin(_wobbleTime * 2.8f) * 0.24f;
                 transform.position = _basePos + Vector3.up * (0.45f + hover);
                 transform.Rotate(0f, 28f * Time.deltaTime, 0f, Space.World);
+                if (_celebrationCrown != null)
+                {
+                    _celebrationCrown.position = transform.position + Vector3.up * 1.65f;
+                    _celebrationCrown.Rotate(0f, -95f * Time.deltaTime, 0f, Space.World);
+                }
             }
         }
 
@@ -74,10 +81,46 @@ namespace PocketPlanet
         {
             if (IsRepaired) return;
             IsRepaired = true;
+            SpawnCelebrationCrown();
             PocketPlanetAudio.PlaySfx("ship_repair_fanfare", 1.0f);
             if (player != null)
                 player.SetCelebrating(true);
             PocketPlanetGameManager.Instance?.OnShipRepaired();
+        }
+
+        private void SpawnCelebrationCrown()
+        {
+            if (_celebrationCrown != null) return;
+            GameObject crown = new GameObject("StarhopperCelebrationCrown");
+            _celebrationCrown = crown.transform;
+            _celebrationCrown.position = transform.position + Vector3.up * 1.65f;
+
+            Shader s = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Material goldMat = new Material(s);
+            Color gold = new Color(1.0f, 0.88f, 0.28f);
+            goldMat.color = gold;
+            if (goldMat.HasProperty("_BaseColor")) goldMat.SetColor("_BaseColor", gold);
+            goldMat.EnableKeyword("_EMISSION");
+            if (goldMat.HasProperty("_EmissionColor")) goldMat.SetColor("_EmissionColor", gold * 1.6f);
+
+            const int count = 8;
+            for (int i = 0; i < count; i++)
+            {
+                float ang = (i / (float)count) * Mathf.PI * 2f;
+                GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                orb.name = $"StarOrb_{i}";
+                Destroy(orb.GetComponent<Collider>());
+                orb.transform.SetParent(_celebrationCrown, false);
+                orb.transform.localPosition = new Vector3(Mathf.Cos(ang) * 1.85f, Mathf.Sin(ang * 2f) * 0.18f, Mathf.Sin(ang) * 1.85f);
+                orb.transform.localScale = Vector3.one * 0.24f;
+                orb.GetComponent<Renderer>().sharedMaterial = goldMat;
+            }
+
+            Light glow = crown.AddComponent<Light>();
+            glow.type = LightType.Point;
+            glow.color = new Color(1.0f, 0.86f, 0.36f);
+            glow.intensity = 3.5f;
+            glow.range = 8.5f;
         }
     }
 }
