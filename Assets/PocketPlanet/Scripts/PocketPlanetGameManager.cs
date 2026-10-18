@@ -24,9 +24,21 @@ namespace PocketPlanet
         private readonly HashSet<string> _completedInteractions = new HashSet<string>();
         public IReadOnlyCollection<string> CompletedInteractions => _completedInteractions;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ForceWindowedModeOnStartup()
+        {
+            if (!Application.isBatchMode)
+            {
+                Screen.fullScreenMode = FullScreenMode.Windowed;
+                Screen.fullScreen = false;
+                Screen.SetResolution(1440, 900, FullScreenMode.Windowed);
+            }
+        }
+
         private void Awake()
         {
             Instance = this;
+            ForceWindowedModeOnStartup();
         }
 
         private void Update()
@@ -35,15 +47,17 @@ namespace PocketPlanet
                 _bannerTimer -= Time.deltaTime;
 
             var kb = UnityEngine.InputSystem.Keyboard.current;
-            if (kb != null)
-            {
-                if (kb.hKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
-                    ShowControlsHelp = !ShowControlsHelp;
-                if (ShipRepaired && kb.cKey.wasPressedThisFrame)
-                    KeepExploring();
-                if (ShipRepaired && kb.pKey.wasPressedThisFrame)
-                    RestartAdventure();
-            }
+            bool toggleHelp = Input.GetKeyDown(KeyCode.H) || Input.GetKeyDown(KeyCode.Tab)
+                || (kb != null && (kb.hKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame));
+            bool keepExploringKey = Input.GetKeyDown(KeyCode.C) || (kb != null && kb.cKey.wasPressedThisFrame);
+            bool restartKey = Input.GetKeyDown(KeyCode.P) || (kb != null && kb.pKey.wasPressedThisFrame);
+
+            if (toggleHelp)
+                ShowControlsHelp = !ShowControlsHelp;
+            if (ShipRepaired && keepExploringKey)
+                KeepExploring();
+            if (ShipRepaired && restartKey)
+                RestartAdventure();
         }
 
         public void RecordInteraction(string label)

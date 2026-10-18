@@ -458,21 +458,46 @@ namespace PocketPlanet
             interactPressed = false;
             throwPressed = false;
 
+            // 1. Legacy UnityEngine.Input fallback (always active when activeInputHandler is 0 or 2)
+            float legX = 0f;
+            float legY = 0f;
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) legX -= 1f;
+            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) legX += 1f;
+            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) legY -= 1f;
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) legY += 1f;
+            move = new Vector2(legX, legY);
+
+            sprintHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            jumpPressed = Input.GetKeyDown(KeyCode.Space);
+            jumpHeld = Input.GetKey(KeyCode.Space);
+            interactPressed = Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.Return);
+            throwPressed = Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.R);
+            if (Input.GetMouseButtonDown(0) && CarriedFruit != null)
+            {
+                throwPressed = true;
+            }
+
+            // 2. New Input System (Keyboard / Mouse / Gamepad)
             var kb = Keyboard.current;
             if (kb != null)
             {
-                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) move.x -= 1f;
-                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) move.x += 1f;
-                if (kb.sKey.isPressed || kb.downArrowKey.isPressed) move.y -= 1f;
-                if (kb.wKey.isPressed || kb.upArrowKey.isPressed) move.y += 1f;
-                if (move.sqrMagnitude > 1f) move.Normalize();
+                Vector2 kbMove = Vector2.zero;
+                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) kbMove.x -= 1f;
+                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) kbMove.x += 1f;
+                if (kb.sKey.isPressed || kb.downArrowKey.isPressed) kbMove.y -= 1f;
+                if (kb.wKey.isPressed || kb.upArrowKey.isPressed) kbMove.y += 1f;
+                if (kbMove.sqrMagnitude > move.sqrMagnitude)
+                    move = kbMove;
 
-                sprintHeld = kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
-                jumpPressed = kb.spaceKey.wasPressedThisFrame;
-                jumpHeld = kb.spaceKey.isPressed;
-                interactPressed = kb.eKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame;
-                throwPressed = kb.qKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame;
+                sprintHeld |= kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
+                jumpPressed |= kb.spaceKey.wasPressedThisFrame;
+                jumpHeld |= kb.spaceKey.isPressed;
+                interactPressed |= kb.eKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame;
+                throwPressed |= kb.qKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame;
             }
+
+            if (move.sqrMagnitude > 1f)
+                move.Normalize();
 
             var mouse = Mouse.current;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame && CarriedFruit != null)

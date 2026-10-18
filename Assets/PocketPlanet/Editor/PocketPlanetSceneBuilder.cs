@@ -94,6 +94,11 @@ namespace PocketPlanet.Editor
 
         public static void BuildMacStandalonePlayer()
         {
+            PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+            PlayerSettings.defaultIsNativeResolution = false;
+            PlayerSettings.defaultScreenWidth = 1440;
+            PlayerSettings.defaultScreenHeight = 900;
+            PlayerSettings.macRetinaSupport = true;
             PlayerSettings.runInBackground = true;
             PlayerSettings.resizableWindow = true;
             Directory.CreateDirectory("Builds");

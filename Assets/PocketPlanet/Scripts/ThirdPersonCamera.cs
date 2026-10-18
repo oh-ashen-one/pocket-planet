@@ -91,34 +91,48 @@ namespace PocketPlanet
             var mouse = Mouse.current;
             var pad = Gamepad.current;
 
-            if (kb != null && kb.escapeKey.wasPressedThisFrame)
+            bool escPressed = Input.GetKeyDown(KeyCode.Escape) || (kb != null && kb.escapeKey.wasPressedThisFrame);
+            bool rightClickDown = Input.GetMouseButtonDown(1) || (mouse != null && mouse.rightButton.wasPressedThisFrame);
+
+            if (escPressed)
             {
                 _cursorLocked = false;
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
-            else if (mouse != null && mouse.rightButton.wasPressedThisFrame)
+            else if (rightClickDown)
             {
                 _cursorLocked = true;
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
             }
 
-            bool rotateMouse = _cursorLocked || (mouse != null && (mouse.rightButton.isPressed || mouse.leftButton.isPressed));
-            if (mouse != null && rotateMouse)
+            bool rotateMouse = _cursorLocked
+                || Input.GetMouseButton(0)
+                || Input.GetMouseButton(1)
+                || (mouse != null && (mouse.rightButton.isPressed || mouse.leftButton.isPressed));
+
+            if (rotateMouse)
             {
-                Vector2 delta = mouse.delta.ReadValue();
+                Vector2 delta = Vector2.zero;
+                if (mouse != null)
+                    delta = mouse.delta.ReadValue();
+                if (delta.sqrMagnitude < 0.0001f)
+                    delta = new Vector2(Input.GetAxisRaw("Mouse X") * 12f, Input.GetAxisRaw("Mouse Y") * 12f);
+
                 yaw += delta.x * mouseSensitivity;
                 pitch = Mathf.Clamp(pitch - delta.y * mouseSensitivity, minPitch, maxPitch);
             }
 
+            float scroll = 0f;
             if (mouse != null)
+                scroll = mouse.scroll.ReadValue().y * 0.003f;
+            if (Mathf.Abs(scroll) < 0.0001f)
+                scroll = Input.mouseScrollDelta.y * 0.25f;
+
+            if (Mathf.Abs(scroll) > 0.0001f)
             {
-                float scroll = mouse.scroll.ReadValue().y;
-                if (Mathf.Abs(scroll) > 0.01f)
-                {
-                    distance = Mathf.Clamp(distance - scroll * 0.003f, minDistance, maxDistance);
-                }
+                distance = Mathf.Clamp(distance - scroll, minDistance, maxDistance);
             }
 
             if (pad != null)
@@ -131,11 +145,10 @@ namespace PocketPlanet
                 }
             }
 
-            if (kb != null)
-            {
-                if (kb.qKey.isPressed) yaw -= 85f * Time.deltaTime;
-                if (kb.eKey.isPressed) yaw += 85f * Time.deltaTime;
-            }
+            bool orbitLeft = Input.GetKey(KeyCode.Q) || (kb != null && kb.qKey.isPressed);
+            bool orbitRight = Input.GetKey(KeyCode.E) || (kb != null && kb.eKey.isPressed);
+            if (orbitLeft) yaw -= 85f * Time.deltaTime;
+            if (orbitRight) yaw += 85f * Time.deltaTime;
         }
     }
 }
