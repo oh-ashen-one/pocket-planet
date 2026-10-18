@@ -1,14 +1,16 @@
 {
-  "mode": "perf",
-  "samples": 1026,
-  "resolution": "1280x720",
+  "mode": "full",
+  "samples": 743,
+  "resolution": "1440x900",
   "qualityLevel": "Ultra",
-  "avgFrameTimeMs": 17.04,
-  "avgFps": 58.7,
+  "avgFrameTimeMs": 21.81,
+  "avgFps": 45.9,
   "p50FrameTimeMs": 16.69,
-  "p95FrameTimeMs": 17.58,
-  "p99FrameTimeMs": 19.18,
-  "onePercentLowFps": 52.1,
-  "collectedSeeds": 3,
-  "shipRepaired": true
+  "p95FrameTimeMs": 33.34,
+  "p99FrameTimeMs": 50.00,
+  "onePercentLowFps": 20.0,
+  "talkedToAstra": true,
+  "collectedSolarisCore": true,
+  "flewToObsidianDeadwood": true,
+  "deliveredSolarisCore": true
 }

@@ -1,0 +1,16 @@
+{
+  "mode": "full",
+  "samples": 743,
+  "resolution": "1440x900",
+  "qualityLevel": "Ultra",
+  "avgFrameTimeMs": 21.81,
+  "avgFps": 45.9,
+  "p50FrameTimeMs": 16.69,
+  "p95FrameTimeMs": 33.34,
+  "p99FrameTimeMs": 50.00,
+  "onePercentLowFps": 20.0,
+  "talkedToAstra": true,
+  "collectedSolarisCore": true,
+  "flewToObsidianDeadwood": true,
+  "deliveredSolarisCore": true
+}

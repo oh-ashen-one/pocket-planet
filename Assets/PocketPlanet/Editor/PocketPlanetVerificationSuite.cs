@@ -37,12 +37,16 @@ namespace PocketPlanet.Editor
                 }
             }
 
-            // 2. Verify all 14 prop prefabs exist in Resources/Props
+            // 2. Verify all 28 prop prefabs (14 original + 14 Tripo 3D H3.1 assets) exist in Resources/Props
             string[] expectedProps =
             {
                 "Starberry", "StarSeed", "BouncyShroom", "PushBall", "DominoBlock",
                 "CrystalLever", "UnfoldingBridge", "AlienPodHome", "PastelRockPlatform",
-                "GlowingFloraTuft", "BloomPlant", "BloopCreature", "StarhopperShip", "CustomuseFloraStatue"
+                "GlowingFloraTuft", "BloomPlant", "BloopCreature", "StarhopperShip", "CustomuseFloraStatue",
+                "TripoLushTree", "TripoAlienPalmTree", "TripoFlowerBush", "TripoFlyingSaucer",
+                "TripoNpcAstra", "TripoSolarisCore", "TripoSpaceAsteroid", "TripoDeadwoodTree",
+                "TripoObsidianRuin", "TripoNpcNyx", "TripoShrineLantern", "TripoCrashedSaucer",
+                "TripoObsidianCrystal", "TripoSpookyMushroom"
             };
             foreach (string p in expectedProps)
             {
@@ -50,35 +54,33 @@ namespace PocketPlanet.Editor
                     errors.Add($"Missing prop prefab: Resources/Props/{p}");
             }
 
-            // 3. Verify all 20 synthesized audio clips exist in Resources/Audio
+            // 3. Verify all 26 synthesized audio clips exist in Resources/Audio
             AudioClip[] audioClips = Resources.LoadAll<AudioClip>("Audio");
-            if (audioClips == null || audioClips.Length < 18)
-                errors.Add($"Expected >=18 audio clips in Resources/Audio, found {(audioClips != null ? audioClips.Length : 0)}");
+            if (audioClips == null || audioClips.Length < 24)
+                errors.Add($"Expected >=24 audio clips in Resources/Audio, found {(audioClips != null ? audioClips.Length : 0)}");
 
-            // 4. Open PocketPlanet.unity scene and verify all core gameplay components are wired
+            // 4. Open PocketPlanet.unity scene and verify all core & two-planet gameplay components are wired
             EditorSceneManager.OpenScene("Assets/PocketPlanet/Scenes/PocketPlanet.unity", OpenSceneMode.Single);
             if (Object.FindFirstObjectByType<PipCharacterController>() == null)
                 errors.Add("Scene missing PipCharacterController");
             if (Object.FindFirstObjectByType<ThirdPersonCamera>() == null)
                 errors.Add("Scene missing ThirdPersonCamera");
-            if (Object.FindFirstObjectByType<HungryBloomPlant>() == null)
-                errors.Add("Scene missing HungryBloomPlant");
-            if (Object.FindFirstObjectByType<BouncyMushroom>() == null)
-                errors.Add("Scene missing BouncyMushroom");
-            if (Object.FindFirstObjectByType<PushableBoulder>() == null)
-                errors.Add("Scene missing PushableBoulder");
-            if (Object.FindFirstObjectByType<CrystalLeverBridge>() == null)
-                errors.Add("Scene missing CrystalLeverBridge");
-            if (Object.FindFirstObjectByType<FriendlyAlienBloop>() == null)
-                errors.Add("Scene missing FriendlyAlienBloop");
-            if (Object.FindFirstObjectByType<ShallowWaterZone>() == null)
-                errors.Add("Scene missing ShallowWaterZone");
-            if (Object.FindFirstObjectByType<StarhopperSpaceship>() == null)
-                errors.Add("Scene missing StarhopperSpaceship");
+            if (Object.FindFirstObjectByType<PlanetaryAtmosphereController>() == null)
+                errors.Add("Scene missing PlanetaryAtmosphereController");
+            if (Object.FindFirstObjectByType<SolarisCoreRelic>() == null)
+                errors.Add("Scene missing SolarisCoreRelic");
+            if (Object.FindFirstObjectByType<SpaceshipFlightController>() == null)
+                errors.Add("Scene missing SpaceshipFlightController");
+            if (Object.FindFirstObjectByType<ObsidianShrineAltar>() == null)
+                errors.Add("Scene missing ObsidianShrineAltar");
 
-            StarSeedCollectible[] seeds = Object.FindObjectsByType<StarSeedCollectible>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (seeds.Length != 3)
-                errors.Add($"Scene expected 3 StarSeedCollectibles, found {seeds.Length}");
+            NpcCharacterDialogue[] npcs = Object.FindObjectsByType<NpcCharacterDialogue>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (npcs.Length < 2)
+                errors.Add($"Scene expected >=2 NpcCharacterDialogue instances (Captain Astra & Warden Nyx), found {npcs.Length}");
+
+            SpaceWarpBoostRing[] rings = Object.FindObjectsByType<SpaceWarpBoostRing>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (rings.Length < 4)
+                errors.Add($"Scene expected >=4 SpaceWarpBoostRing instances in space corridor, found {rings.Length}");
 
             if (errors.Count > 0)
             {
@@ -89,7 +91,7 @@ namespace PocketPlanet.Editor
             }
             else
             {
-                Debug.Log("[PocketPlanetVerificationSuite] ALL CHECKS PASSED (PipHero 22-bone rig, 12 clips, 14 prop prefabs, 20 audio clips, 3 Star Seeds, 7 interactive systems).");
+                Debug.Log("[PocketPlanetVerificationSuite] ALL CHECKS PASSED (PipHero 22-bone rig, 12 clips, 28 prop prefabs including 14 Tripo 3D assets, 26 audio clips, Two-Planet + 3D Space Flight quest systems).");
                 if (Application.isBatchMode)
                     EditorApplication.Exit(0);
             }

@@ -44,3 +44,7 @@ secrets.json
 *.blend2
 __pycache__/
 *.pyc
+
+# Raw 2M-poly Tripo GLB intermediates (processed FBXs & Albedo PNGs are committed in Assets/PocketPlanet/Art/Props/)
+tools/tripo_sources/*.glb
+

@@ -82,5 +82,18 @@ namespace PocketPlanet
                 PlaySfx($"footstep_grass_{idx}", 0.50f, Random.Range(0.93f, 1.07f));
             }
         }
+
+        public static void SetZoneMusic(string bgmClipName)
+        {
+            if (Instance == null || string.IsNullOrEmpty(bgmClipName)) return;
+            if (Instance._clips.TryGetValue(bgmClipName, out AudioClip clip) && clip != null)
+            {
+                if (Instance._bgmSource.clip != clip)
+                {
+                    Instance._bgmSource.clip = clip;
+                    Instance._bgmSource.Play();
+                }
+            }
+        }
     }
 }

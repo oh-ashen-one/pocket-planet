@@ -50,6 +50,20 @@ namespace PocketPlanet.Editor
             "BloopCreature",
             "StarhopperShip",
             "CustomuseFloraStatue",
+            "TripoLushTree",
+            "TripoAlienPalmTree",
+            "TripoFlowerBush",
+            "TripoFlyingSaucer",
+            "TripoNpcAstra",
+            "TripoSolarisCore",
+            "TripoSpaceAsteroid",
+            "TripoDeadwoodTree",
+            "TripoObsidianRuin",
+            "TripoNpcNyx",
+            "TripoShrineLantern",
+            "TripoCrashedSaucer",
+            "TripoObsidianCrystal",
+            "TripoSpookyMushroom",
         };
 
         [MenuItem("PocketPlanet/Import All Assets & Build Prefabs")]

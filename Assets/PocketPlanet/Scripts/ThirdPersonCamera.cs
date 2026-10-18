@@ -8,7 +8,7 @@ namespace PocketPlanet
         public Transform target;
         public Vector3 targetOffset = new Vector3(0f, 0.88f, 0f);
         public float distance = 5.2f;
-        public float minDistance = 1.25f;
+        public float minDistance = 2.6f;
         public float maxDistance = 9.0f;
         public float yaw = 0f;
         public float pitch = 19f;
@@ -17,7 +17,7 @@ namespace PocketPlanet
         public float mouseSensitivity = 0.14f;
         public float gamepadYawSpeed = 125f;
         public float gamepadPitchSpeed = 85f;
-        public float followSmoothTime = 0.06f;
+        public float followSmoothTime = 0.03f;
         public float collisionRadius = 0.24f;
         public LayerMask collisionMask = ~0;
 
@@ -74,9 +74,9 @@ namespace PocketPlanet
                 collisionMask,
                 QueryTriggerInteraction.Ignore))
             {
-                if (!hit.transform.IsChildOf(target))
+                if (!hit.transform.IsChildOf(target) && hit.collider is TerrainCollider)
                 {
-                    targetDist = Mathf.Clamp(hit.distance - 0.12f, minDistance, distance);
+                    targetDist = Mathf.Clamp(hit.distance - 0.15f, minDistance, distance);
                 }
             }
 

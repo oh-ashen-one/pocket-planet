@@ -96,9 +96,22 @@ namespace PocketPlanet
         public StarberryItem CarriedFruit { get; private set; }
         public IPocketInteractable FocusedInteractable { get; private set; }
         public bool InShallowWater { get; set; }
+        public bool IsInVehicle { get; private set; }
         public int CurrentAnimMode => _currentMode;
         public Vector3 PlanarVelocity => _planarVel;
         public bool IsGrounded => _cc != null && _cc.isGrounded;
+
+        public void SetInVehicle(bool inVehicle)
+        {
+            IsInVehicle = inVehicle;
+            if (_cc != null)
+                _cc.enabled = !inVehicle;
+            if (visualRoot != null && visualRoot != transform)
+                visualRoot.gameObject.SetActive(!inVehicle);
+            _planarVel = Vector3.zero;
+            _verticalVel = 0f;
+            FocusedInteractable = null;
+        }
 
         // External / Automated Playtest Input Override
         private bool _overrideActive;
@@ -215,7 +228,7 @@ namespace PocketPlanet
         private void Update()
         {
             float dt = Time.deltaTime;
-            if (dt <= 0f) return;
+            if (dt <= 0f || IsInVehicle) return;
 
             ReadInputs(out Vector2 moveInput, out bool sprintHeld, out bool jumpPressed, out bool jumpHeld, out bool interactPressed, out bool throwPressed);
 
@@ -575,7 +588,7 @@ namespace PocketPlanet
         {
             FocusedInteractable = null;
             float bestScore = float.MaxValue;
-            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, 2.5f);
+            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, 4.5f);
             foreach (Collider col in hits)
             {
                 IPocketInteractable inter = col.GetComponentInParent<IPocketInteractable>();
@@ -744,6 +757,11 @@ namespace PocketPlanet
                 animator.SetInteger("Mode", desiredMode);
                 animator.speed = animSpeed;
             }
+        }
+
+        public void TeleportTo(Vector3 position)
+        {
+            TeleportTo(position, transform.rotation);
         }
 
         public void TeleportTo(Vector3 position, Quaternion rotation)

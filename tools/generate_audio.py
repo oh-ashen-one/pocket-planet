@@ -370,6 +370,135 @@ def gen_bgm_loop():
     return out
 
 
+def gen_npc_chirp():
+    dur = 0.34
+    n = int(SR * dur)
+    out = []
+    notes = [440.0, 554.37, 659.25, 587.33]
+    for i in range(n):
+        t = i / SR
+        idx = min(3, int(t / (dur / 4.0)))
+        lt = t - idx * (dur / 4.0)
+        f = notes[idx] * (1.0 + 0.06 * math.sin(2 * math.pi * 24.0 * lt))
+        env = math.exp(-lt * 18.0) * min(1.0, lt / 0.006)
+        out.append((0.75 * math.sin(2 * math.pi * f * lt) + 0.25 * math.sin(4 * math.pi * f * lt)) * env * 0.6)
+    return out
+
+
+def gen_solaris_core_pickup():
+    dur = 1.85
+    n = int(SR * dur)
+    out = []
+    notes = [
+        (0.00, 587.33),
+        (0.12, 739.99),
+        (0.24, 880.00),
+        (0.36, 1174.66),
+        (0.50, 1479.98),
+        (0.66, 1760.00),
+    ]
+    for i in range(n):
+        t = i / SR
+        s = 0.0
+        for st, nf in notes:
+            if t >= st:
+                lt = t - st
+                env = math.exp(-lt * 2.8) * min(1.0, lt / 0.008)
+                s += (0.6 * math.sin(2 * math.pi * nf * lt) + 0.3 * math.sin(4 * math.pi * nf * lt) + 0.1 * math.sin(6 * math.pi * nf * lt)) * env * 0.28
+        out.append(s)
+    return out
+
+
+def gen_saucer_launch():
+    dur = 1.4
+    n = int(SR * dur)
+    out = []
+    phase = 0.0
+    for i in range(n):
+        t = i / SR
+        f = 140.0 + 620.0 * ((t / dur) ** 1.4) + 35.0 * math.sin(2 * math.pi * 14.0 * t)
+        phase += 2 * math.pi * f / SR
+        env = math.sin(math.pi * min(1.0, t / dur)) ** 0.5
+        s = 0.65 * math.sin(phase) + 0.25 * math.sin(phase * 2.0) + 0.10 * math.sin(phase * 3.0)
+        out.append(s * env * 0.65)
+    return out
+
+
+def gen_saucer_boost():
+    dur = 0.65
+    n = int(SR * dur)
+    out = []
+    phase = 0.0
+    for i in range(n):
+        t = i / SR
+        f = 320.0 + 740.0 * math.sin(0.5 * math.pi * (t / dur))
+        phase += 2 * math.pi * f / SR
+        env = math.exp(-t * 3.8) * min(1.0, t / 0.015)
+        out.append((0.7 * math.sin(phase) + 0.3 * math.sin(2.0 * phase)) * env * 0.65)
+    return out
+
+
+def gen_shrine_ignite():
+    dur = 2.8
+    n = int(SR * dur)
+    out = []
+    chord = [293.66, 440.00, 587.33, 739.99, 880.00, 1174.66, 1479.98]
+    for i in range(n):
+        t = i / SR
+        s = 0.0
+        for k, nf in enumerate(chord):
+            st = k * 0.11
+            if t >= st:
+                lt = t - st
+                env = math.exp(-lt * 1.65) * min(1.0, lt / 0.02)
+                s += (0.65 * math.sin(2 * math.pi * nf * lt) + 0.25 * math.sin(4 * math.pi * nf * lt)) * env * 0.22
+        out.append(s)
+    return out
+
+
+def gen_bgm_obsidian_loop():
+    # Seamless 16-second brooding dark-crystal ambient loop (D minor9 / Bb maj7#11 / G minor7 / A7b9)
+    dur = 16.0
+    n = int(SR * dur)
+    out = [0.0] * n
+    rng = random.Random(909)
+    chords = [
+        [146.83, 220.00, 261.63, 329.63],
+        [116.54, 174.61, 220.00, 293.66],
+        [196.00, 233.08, 293.66, 349.23],
+        [110.00, 164.81, 220.00, 277.18],
+    ]
+    arp_pattern = [0, 2, 1, 3, 2, 3, 1, 0]
+    beat_s = 0.5
+    for beat in range(32):
+        bar = (beat // 8) % 4
+        chord = chords[bar]
+        note_f = chord[arp_pattern[beat % 8]] * 2.0
+        st = beat * beat_s
+        start_idx = int(st * SR)
+        note_len = int(1.35 * SR)
+        for j in range(note_len):
+            idx = (start_idx + j) % n
+            lt = j / SR
+            env = math.exp(-lt * 3.2) * min(1.0, lt / 0.02)
+            val = (0.75 * math.sin(2 * math.pi * note_f * lt) + 0.25 * math.sin(3 * math.pi * note_f * lt)) * env * 0.14
+            out[idx] += val
+    lp = 0.0
+    for i in range(n):
+        t = i / SR
+        bar = int(t // 4.0) % 4
+        lt = t % 4.0
+        pad_env = math.sin(math.pi * lt / 4.0) ** 0.6
+        pad = 0.0
+        for cf in chords[bar]:
+            pad += math.sin(2 * math.pi * cf * t + 0.2 * math.sin(2 * math.pi * 0.5 * t)) * 0.055
+        noise = rng.uniform(-1.0, 1.0)
+        lp = 0.985 * lp + 0.015 * noise
+        wind = lp * 0.08 * (0.6 + 0.4 * math.sin(2 * math.pi * 0.125 * t))
+        out[i] += pad * pad_env + wind
+    return out
+
+
 def main():
     clips = {
         "footstep_grass_0": gen_footstep_grass(0),
@@ -392,6 +521,12 @@ def main():
         "star_seed_collect": gen_star_seed_collect(),
         "ship_repair_fanfare": gen_ship_repair_fanfare(),
         "bgm_pocket_planet": gen_bgm_loop(),
+        "npc_chirp": gen_npc_chirp(),
+        "solaris_core_pickup": gen_solaris_core_pickup(),
+        "saucer_launch": gen_saucer_launch(),
+        "saucer_boost": gen_saucer_boost(),
+        "shrine_ignite": gen_shrine_ignite(),
+        "bgm_obsidian_deadwood": gen_bgm_obsidian_loop(),
     }
     for name, samples in clips.items():
         p = save_wav(name, samples)

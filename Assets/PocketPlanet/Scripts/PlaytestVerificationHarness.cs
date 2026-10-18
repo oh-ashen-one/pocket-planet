@@ -21,6 +21,13 @@ namespace PocketPlanet
         public ResponsiveFlora sampleFlora;
         public StarhopperSpaceship spaceship;
 
+        [Header("Two-Planet & Space Flight Quest References")]
+        public NpcCharacterDialogue captainAstra;
+        public SolarisCoreRelic solarisCore;
+        public SpaceshipFlightController flyingSaucer;
+        public NpcCharacterDialogue wardenNyx;
+        public ObsidianShrineAltar obsidianShrine;
+
         private string _mode = "";
         private string _captureDir = "";
         private string _perfJsonPath = "";
@@ -127,21 +134,17 @@ namespace PocketPlanet
 
         private IEnumerator RunMilestone1Sequence()
         {
-            // 1. Hero Idle front/3-quarter view
             SetCameraOrbit(165f, 16f, 3.1f);
             yield return new WaitForSeconds(0.6f);
             SaveShot("m1_01_hero_idle_front.png");
 
-            // 2. Walk forward
             SetCameraOrbit(18f, 18f, 4.2f);
             yield return DriveMove(new Vector2(0f, 0.55f), false, 1.1f);
             SaveShot("m1_02_hero_walk.png");
 
-            // 3. Run & Turn
             yield return DriveMove(new Vector2(0.25f, 1.0f), true, 1.0f);
             SaveShot("m1_03_hero_run.png");
 
-            // 4. Jump & Landing
             player.SetAutomatedInput(true, new Vector2(0f, 0.8f), true, true, false);
             yield return new WaitForSeconds(0.24f);
             SaveShot("m1_04_hero_jump.png");
@@ -150,7 +153,6 @@ namespace PocketPlanet
 
         private IEnumerator RunFullAdventureSequence()
         {
-            // Also refresh Milestone 1 hero showcase shots in sibling milestone1 folder if present
             string m1Dir = "";
             if (!string.IsNullOrEmpty(_captureDir))
             {
@@ -162,21 +164,21 @@ namespace PocketPlanet
                 }
             }
 
-            // Shot 1: Overview of central clearing, broken SS Starhopper & Pip facing camera
-            player.TeleportTo(new Vector3(0f, 0.05f, -3.5f), Quaternion.Euler(0f, 165f, 0f));
-            SetCameraOrbit(12f, 16f, 4.2f);
+            // Shot 1: Overhauled Planet 1 ("Verdant Haven") — Lush Canopy Trees, Spiral Palms, Flower Bushes, Captain Astra & Flying Saucer
+            player.TeleportTo(new Vector3(-0.6f, 0.05f, -3.6f), Quaternion.Euler(0f, -25f, 0f));
+            SetCameraOrbit(-18f, 17f, 5.2f);
             yield return new WaitForSeconds(0.55f);
-            SaveShot("01_central_clearing_pip_and_ship.png");
+            SaveShot("01_verdant_haven_overhaul_overview.png");
             if (!string.IsNullOrEmpty(m1Dir))
                 CaptureCameraToPng(Path.Combine(m1Dir, "m1_01_hero_idle_front.png"), 1280, 720);
 
-            // Walk & Run + Jump check (also updates m1_02..m1_04)
-            SetCameraOrbit(18f, 18f, 4.2f);
-            yield return DriveMove(new Vector2(0f, 0.55f), false, 0.85f);
+            // Walk & Run through lush meadow + Waterfall Pond splash
+            SetCameraOrbit(-10f, 18f, 4.5f);
+            yield return DriveMove(new Vector2(0f, 0.65f), false, 0.85f);
             if (!string.IsNullOrEmpty(m1Dir))
                 CaptureCameraToPng(Path.Combine(m1Dir, "m1_02_hero_walk.png"), 1280, 720);
 
-            yield return DriveMove(new Vector2(0.20f, 1.0f), true, 0.75f);
+            yield return DriveMove(new Vector2(-0.20f, 1.0f), true, 0.75f);
             if (!string.IsNullOrEmpty(m1Dir))
                 CaptureCameraToPng(Path.Combine(m1Dir, "m1_03_hero_run.png"), 1280, 720);
 
@@ -184,140 +186,109 @@ namespace PocketPlanet
             yield return new WaitForSeconds(0.22f);
             if (!string.IsNullOrEmpty(m1Dir))
                 CaptureCameraToPng(Path.Combine(m1Dir, "m1_04_hero_jump.png"), 1280, 720);
-            yield return DriveMove(Vector2.zero, false, 0.55f);
+            yield return DriveMove(Vector2.zero, false, 0.45f);
 
-            // Shot 2: Walk & Run through responsive glowing flora + splash through shallow crystal pond
-            SetCameraOrbit(32f, 20f, 4.6f);
-            if (shallowPond != null)
+            // Shot 2: Walk to Captain Astra at the Starport CampBeacon and talk to receive the Interplanetary Delivery Quest
+            if (captainAstra != null)
             {
-                yield return MoveTowardPoint(shallowPond.transform.position, true, 2.0f, 0.7f);
-                SaveShot("02_shallow_pond_splash_and_flora.png");
-            }
-
-            // Shot 3: Pick up oversized Starberry, show weighted Carry pose, and feed Hungry Bloom-Plant (Star Seed #1)
-            if (primaryBerry != null && hungryPlant != null)
-            {
-                Vector3 berryPos = primaryBerry.transform.position;
-                player.TeleportTo(berryPos + new Vector3(0.8f, 0.05f, 0f), Quaternion.Euler(0f, -90f, 0f));
-                SetCameraOrbit(-52f, 18f, 3.8f);
-                yield return new WaitForSeconds(0.20f);
-                primaryBerry.OnInteract(player);
-                // Wait 0.45s so ModePickup transitions into ModeCarry and turn toward camera/plant
+                Vector3 astraFront = captainAstra.transform.position + new Vector3(1.15f, 0f, -1.05f);
+                player.TeleportTo(astraFront, Quaternion.Euler(0f, -45f, 0f));
+                captainAstra.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+                SetCameraOrbit(-28f, 16f, 4.1f);
+                yield return new WaitForSeconds(0.25f);
+                captainAstra.OnInteract(player);
                 yield return new WaitForSeconds(0.45f);
-                player.transform.rotation = Quaternion.Euler(0f, -135f, 0f);
-                yield return new WaitForSeconds(0.10f);
-                SaveShot("03_carrying_oversized_starberry.png");
-
-                // Carry berry to Hungry Bloom-Plant
-                SetCameraOrbit(-65f, 22f, 4.8f);
-                yield return MoveTowardPoint(hungryPlant.transform.position + new Vector3(1.8f, 0f, 0f), false, 2.0f, 1.4f);
-                hungryPlant.OnInteract(player);
-                yield return new WaitForSeconds(1.45f);
-                if (hungryPlant.rewardSeed != null)
-                    hungryPlant.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
-                SaveShot("04_hungry_plant_blooms_seed1.png");
-
-                // Collect Star Seed #1
-                if (hungryPlant.rewardSeed != null && !hungryPlant.rewardSeed.IsCollected)
-                {
-                    hungryPlant.rewardSeed.Collect(player);
-                    yield return new WaitForSeconds(0.35f);
-                }
+                SaveShot("02_talk_to_captain_astra_quest.png");
+                yield return new WaitForSeconds(0.35f);
+                captainAstra.CloseDialogue();
             }
 
-            // Shot 4: Bounce on springy Jelly-Shroom!
+            // Shot 3: Bounce on springy Jelly-Shroom toward Starlight Ridge & retrieve the glowing Solaris Astral Core!
             if (primaryMushroom != null)
             {
-                player.TeleportTo(primaryMushroom.transform.position + Vector3.up * 0.95f, Quaternion.Euler(0f, 145f, 0f));
-                SetCameraOrbit(-35f, 16f, 4.4f);
+                player.TeleportTo(primaryMushroom.transform.position + Vector3.up * 0.65f, Quaternion.Euler(0f, 35f, 0f));
+                SetCameraOrbit(-32f, 16f, 4.8f);
                 primaryMushroom.TriggerBounce(player);
-                yield return new WaitForSeconds(0.18f);
-                SaveShot("05_bouncy_jelly_shroom_launch.png");
+                yield return new WaitForSeconds(0.16f);
+                if (thirdPersonCamera != null) thirdPersonCamera.SnapToTarget();
+                SaveShot("03_bouncy_shroom_to_starlight_ridge.png");
+                yield return new WaitForSeconds(0.55f);
+            }
+
+            if (solarisCore != null)
+            {
+                Vector3 coreApproach = solarisCore.transform.position + new Vector3(-1.35f, 0f, -1.15f);
+                player.TeleportTo(coreApproach, Quaternion.Euler(0f, 42f, 0f));
+                SetCameraOrbit(32f, 18f, 4.4f);
+                yield return new WaitForSeconds(0.35f);
+                SaveShot("04_starlight_ridge_solaris_core.png");
+                solarisCore.CollectRelic(player);
+                yield return new WaitForSeconds(0.45f);
+            }
+
+            // Shot 5: Approach the Starhopper Flying Saucer on the Launchpad with the glowing Solaris Core & board it!
+            if (flyingSaucer != null)
+            {
+                Vector3 saucerApproach = flyingSaucer.transform.position + new Vector3(2.3f, -0.15f, -2.1f);
+                player.TeleportTo(saucerApproach, Quaternion.Euler(0f, -48f, 0f));
+                SetCameraOrbit(-42f, 18f, 5.2f);
+                yield return new WaitForSeconds(0.40f);
+                SaveShot("05_boarding_flying_saucer_launchpad.png");
+
+                // Board & launch into the 3D Space Flight Corridor!
+                flyingSaucer.StartSpaceFlight(player, true);
+                yield return new WaitForSeconds(0.95f);
+
+                // Shot 6: Pilot the 3D Flying Saucer through the Deep Space Asteroid Belt & Warp Boost Rings toward Obsidian Deadwood!
+                flyingSaucer.SetAutomatedFlightInput(true, new Vector2(0.18f, 0.08f), true);
+                yield return new WaitForSeconds(1.45f);
+                SaveShot("06_deep_space_3d_flight_corridor.png");
+                flyingSaucer.SetAutomatedFlightInput(true, new Vector2(-0.15f, -0.05f), true);
+                yield return new WaitForSeconds(1.25f);
+                flyingSaucer.SetAutomatedFlightInput(false, Vector2.zero, false);
+
+                // Land on Planet 2 (Obsidian Deadwood)
+                if (!flyingSaucer.IsParkedOnPlanetTwo)
+                {
+                    flyingSaucer.CompleteSpaceFlightAndLand(true);
+                }
                 yield return new WaitForSeconds(0.65f);
             }
 
-            // Shot 5: Push boulder down slope to topple domino blocks & collect Star Seed #2!
-            if (slopeBoulder != null)
+            // Shot 7: Arrival on Planet 2 ("Obsidian Deadwood") — Dark Basalt Valley, Gnarled Deadwood Trees, Glowing Violet Crystals & Wrecked Saucer illuminated by Pip's Solaris Core
+            player.TeleportTo(new Vector3(-6.2f, 0.08f, 874f), Quaternion.Euler(0f, 18f, 0f));
+            SetCameraOrbit(14f, 18f, 5.0f);
+            yield return new WaitForSeconds(0.55f);
+            SaveShot("07_obsidian_deadwood_planet2_arrival.png");
+
+            // Walk along the glowing violet-rune path through the ObsidianRuins & Deadwood Forest
+            yield return DriveMove(new Vector2(0.12f, 1.0f), true, 1.35f);
+
+            // Shot 8: Talk to Warden Nyx at the Northern Obsidian Sanctuary beside the Dying Shrine Lantern
+            if (wardenNyx != null)
             {
-                Vector3 behindBoulder = slopeBoulder.transform.position - Vector3.forward * 1.35f;
-                player.TeleportTo(behindBoulder, Quaternion.identity);
-                SetCameraOrbit(12f, 24f, 6.2f);
-                yield return new WaitForSeconds(0.2f);
-                slopeBoulder.ApplyPlayerPush(Vector3.forward, 8.5f);
-                yield return DriveMove(new Vector2(0f, 1f), true, 0.55f);
-                yield return new WaitForSeconds(0.95f);
-                // Ensure dominoes topple and reveal Seed #2
-                foreach (DominoBlock d in slopeBoulder.linkedDominoes)
-                {
-                    if (d != null && !d.IsToppled)
-                        d.ForceTopple(Vector3.forward * 6.5f);
-                }
-                player.TeleportTo(new Vector3(11.4f, 0.05f, 9.2f), Quaternion.Euler(0f, 18f, 0f));
-                SetCameraOrbit(14f, 22f, 5.2f);
+                Vector3 nyxFront = wardenNyx.transform.position + new Vector3(1.55f, 0f, 0.45f);
+                player.TeleportTo(nyxFront, Quaternion.Euler(0f, -55f, 0f));
+                wardenNyx.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+                SetCameraOrbit(-8f, 17f, 4.6f);
+                yield return new WaitForSeconds(0.35f);
+                wardenNyx.OnInteract(player);
                 yield return new WaitForSeconds(0.45f);
-                if (slopeBoulder.rewardSeed != null)
-                    slopeBoulder.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
-                SaveShot("06_boulder_slope_domino_topple.png");
-                if (slopeBoulder.rewardSeed != null)
-                {
-                    slopeBoulder.rewardSeed.RevealSeed(slopeBoulder.rewardSeed.transform.position);
-                    slopeBoulder.rewardSeed.Collect(player);
-                    yield return new WaitForSeconds(0.35f);
-                }
+                SaveShot("08_warden_nyx_and_dying_shrine.png");
+                yield return new WaitForSeconds(0.30f);
+                wardenNyx.CloseDialogue();
             }
 
-            // Shot 6: Pull Crystal Lever to unfold segmented petal bridge!
-            if (crystalLever != null)
+            // Shot 9: Deliver the Solaris Core to the Dying Obsidian Shrine Lantern -> Ignite the Sanctuary Beam & Celebration Finale!
+            if (obsidianShrine != null)
             {
-                player.TeleportTo(crystalLever.transform.position - Vector3.forward * 1.1f, Quaternion.identity);
-                SetCameraOrbit(16f, 22f, 5.4f);
-                yield return new WaitForSeconds(0.2f);
-                crystalLever.OnInteract(player);
-                yield return new WaitForSeconds(0.85f);
-                SaveShot("07_crystal_lever_unfolding_bridge.png");
-            }
-
-            // Shot 7: Cross bridge to Alien Pod Village, pet Friendly Alien Bloop & collect Star Seed #3!
-            if (friendlyBloop != null)
-            {
-                Vector3 bloopBase = friendlyBloop.transform.position;
-                player.TeleportTo(bloopBase + new Vector3(-0.72f, 0f, -0.55f), Quaternion.Euler(0f, 52f, 0f));
-                friendlyBloop.transform.rotation = Quaternion.Euler(0f, -155f, 0f);
-                SetCameraOrbit(8f, 18f, 4.2f);
-                yield return new WaitForSeconds(0.2f);
-                friendlyBloop.OnInteract(player);
-                yield return new WaitForSeconds(0.55f);
-                player.TeleportTo(bloopBase + new Vector3(-0.72f, 0f, -0.55f), Quaternion.Euler(0f, 52f, 0f));
-                friendlyBloop.transform.SetPositionAndRotation(bloopBase + new Vector3(0.32f, 0f, 0.1f), Quaternion.Euler(0f, -155f, 0f));
-                if (friendlyBloop.rewardSeed != null)
-                    friendlyBloop.rewardSeed.transform.rotation = Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f);
-                SaveShot("08_pet_friendly_bloop_seed3.png");
-                if (friendlyBloop.rewardSeed != null && !friendlyBloop.rewardSeed.IsCollected)
-                {
-                    friendlyBloop.rewardSeed.Collect(player);
-                    yield return new WaitForSeconds(0.35f);
-                }
-                // Walk so Bloop follows happily behind Pip
-                SetCameraOrbit(15f, 20f, 4.6f);
-                yield return DriveMove(new Vector2(0.15f, 0.9f), false, 1.0f);
-            }
-
-            // Shot 8: Return to SS Starhopper in central clearing with all 3 Star Seeds & repair it!
-            if (spaceship != null)
-            {
-                Vector3 inFrontOfShip = spaceship.transform.position + new Vector3(-0.9f, 0.05f, -3.6f);
-                player.TeleportTo(inFrontOfShip, Quaternion.Euler(0f, 162f, 0f));
-                if (friendlyBloop != null)
-                {
-                    friendlyBloop.transform.SetPositionAndRotation(
-                        spaceship.transform.position + new Vector3(0.95f, 0.05f, -3.3f),
-                        Quaternion.Euler(0f, 168f, 0f));
-                }
-                SetCameraOrbit(4f, 15f, 4.6f);
+                Vector3 inFrontOfShrine = obsidianShrine.transform.position + new Vector3(-0.6f, 0f, -2.9f);
+                player.TeleportTo(inFrontOfShrine, Quaternion.Euler(0f, 12f, 0f));
+                SetCameraOrbit(8f, 16f, 5.4f);
                 yield return new WaitForSeconds(0.25f);
-                spaceship.RepairSpaceship(player);
-                yield return new WaitForSeconds(0.80f);
-                SaveShot("09_starhopper_repaired_celebration.png");
+                obsidianShrine.IgniteShrine(player);
+                yield return new WaitForSeconds(0.95f);
+                SaveShot("09_obsidian_shrine_ignited_finale.png");
                 yield return new WaitForSeconds(0.85f);
             }
 
@@ -340,33 +311,6 @@ namespace PocketPlanet
             {
                 elapsed += Time.deltaTime;
                 player.SetAutomatedInput(true, input, sprint, false, false);
-                yield return null;
-            }
-            player.SetAutomatedInput(false, Vector2.zero);
-        }
-
-        private IEnumerator MoveTowardPoint(Vector3 targetPos, bool sprint, float maxDuration, float stopDist)
-        {
-            float elapsed = 0f;
-            while (elapsed < maxDuration)
-            {
-                elapsed += Time.deltaTime;
-                Vector3 toTarget = targetPos - player.transform.position;
-                toTarget.y = 0f;
-                if (toTarget.magnitude <= stopDist)
-                    break;
-
-                Vector3 dir = toTarget.normalized;
-                if (thirdPersonCamera != null)
-                {
-                    Quaternion invCam = Quaternion.Inverse(Quaternion.Euler(0f, thirdPersonCamera.yaw, 0f));
-                    Vector3 camLocal = invCam * dir;
-                    player.SetAutomatedInput(true, new Vector2(camLocal.x, camLocal.z), sprint, false, false);
-                }
-                else
-                {
-                    player.SetAutomatedInput(true, new Vector2(dir.x, dir.z), sprint, false, false);
-                }
                 yield return null;
             }
             player.SetAutomatedInput(false, Vector2.zero);
@@ -415,16 +359,22 @@ namespace PocketPlanet
 
         private void DrawHudBadgeOverlay(Texture2D tex, int width, int height)
         {
-            int seeds = gameManager != null ? gameManager.CollectedSeeds : 0;
-            bool repaired = gameManager != null && gameManager.ShipRepaired;
+            bool talked = gameManager != null && gameManager.TalkedToAstra;
+            bool hasCore = gameManager != null && gameManager.HasSolarisCore;
+            bool landedP2 = gameManager != null && gameManager.HasFlownToPlanetTwo;
+            bool delivered = gameManager != null && gameManager.ShrineDelivered;
+
+            int stepsDone = (talked ? 1 : 0) + (hasCore ? 1 : 0) + (landedP2 ? 1 : 0) + (delivered ? 1 : 0);
 
             int boxX = 16;
-            int boxW = 220;
+            int boxW = 248;
             int boxH = 44;
             int boxY = height - boxH - 16;
 
-            Color bgCol = new Color(0.08f, 0.07f, 0.18f, 0.85f);
-            Color borderCol = repaired ? new Color(1.0f, 0.86f, 0.32f, 1f) : new Color(0.38f, 0.82f, 0.74f, 1f);
+            Color bgCol = new Color(0.07f, 0.06f, 0.16f, 0.86f);
+            Color borderCol = delivered
+                ? new Color(1.0f, 0.88f, 0.34f, 1f)
+                : (landedP2 ? new Color(0.72f, 0.42f, 0.98f, 1f) : new Color(0.36f, 0.86f, 0.78f, 1f));
 
             for (int y = boxY; y < boxY + boxH; y++)
             {
@@ -434,49 +384,48 @@ namespace PocketPlanet
                     if (x < 0 || x >= width) continue;
                     bool isBorder = (x - boxX < 2) || (boxX + boxW - 1 - x < 2) || (y - boxY < 2) || (boxY + boxH - 1 - y < 2);
                     Color cur = tex.GetPixel(x, y);
-                    tex.SetPixel(x, y, isBorder ? borderCol : Color.Lerp(cur, bgCol, 0.82f));
+                    tex.SetPixel(x, y, isBorder ? borderCol : Color.Lerp(cur, bgCol, 0.84f));
                 }
             }
 
-            // Draw 3 Star Seed diamond/star emblems inside the HUD bar
-            for (int i = 0; i < 3; i++)
+            // Draw 4 Quest Milestone Star Emblems inside the HUD bar (1: Astra, 2: Solaris Core, 3: Space Flight, 4: Obsidian Shrine)
+            for (int i = 0; i < 4; i++)
             {
-                int cx = boxX + 34 + i * 44;
+                int cx = boxX + 28 + i * 38;
                 int cy = boxY + boxH / 2;
-                bool active = i < seeds;
+                bool active = i < stepsDone;
                 Color starCol = active ? new Color(1.0f, 0.88f, 0.25f) : new Color(0.28f, 0.26f, 0.42f);
                 Color coreCol = active ? new Color(1.0f, 0.98f, 0.78f) : new Color(0.22f, 0.20f, 0.34f);
-                int rad = 13;
+                int rad = 12;
                 for (int dy = -rad; dy <= rad; dy++)
                 {
                     for (int dx = -rad; dx <= rad; dx++)
                     {
                         float ax = Mathf.Abs(dx);
                         float ay = Mathf.Abs(dy);
-                        // 4-pointed star + center disk silhouette
-                        bool inStar = (ax + ay <= rad) || (ax <= 4 && ay <= rad - 2) || (ay <= 4 && ax <= rad - 2);
+                        bool inStar = (ax + ay <= rad) || (ax <= 3 && ay <= rad - 2) || (ay <= 3 && ax <= rad - 2);
                         if (inStar)
                         {
                             float d = Mathf.Sqrt(dx * dx + dy * dy);
-                            tex.SetPixel(cx + dx, cy + dy, d < 5f ? coreCol : starCol);
+                            tex.SetPixel(cx + dx, cy + dy, d < 4.5f ? coreCol : starCol);
                         }
                     }
                 }
             }
 
-            // Status indicator pill on the right side of the HUD box
-            int pillX = boxX + 162;
-            int pillW = 42;
+            // Progress bar pill on the right side of the HUD box
+            int pillX = boxX + 184;
+            int pillW = 48;
             int pillY = boxY + 12;
             int pillH = 20;
-            Color pillCol = repaired
+            Color pillCol = delivered
                 ? new Color(0.32f, 0.96f, 0.62f)
-                : (seeds > 0 ? new Color(0.32f, 0.82f, 0.95f) : new Color(0.35f, 0.32f, 0.52f));
+                : (landedP2 ? new Color(0.76f, 0.44f, 0.98f) : new Color(0.32f, 0.86f, 0.96f));
             for (int y = pillY; y < pillY + pillH; y++)
             {
                 for (int x = pillX; x < pillX + pillW; x++)
                 {
-                    float fillRatio = repaired ? 1f : (seeds / 3f);
+                    float fillRatio = delivered ? 1f : (stepsDone / 4f);
                     bool filled = (x - pillX) <= pillW * Mathf.Max(0.18f, fillRatio);
                     tex.SetPixel(x, y, filled ? pillCol : new Color(0.16f, 0.14f, 0.28f));
                 }
@@ -499,8 +448,10 @@ namespace PocketPlanet
             float p99Ms = _frameTimesMs[Mathf.Clamp((int)(n * 0.99f), 0, n - 1)];
             float onePercentLowFps = 1000f / Mathf.Max(0.01f, p99Ms);
 
-            int seeds = gameManager != null ? gameManager.CollectedSeeds : 0;
-            bool repaired = gameManager != null && gameManager.ShipRepaired;
+            bool talked = gameManager != null && gameManager.TalkedToAstra;
+            bool hasCore = gameManager != null && gameManager.HasSolarisCore;
+            bool landedP2 = gameManager != null && gameManager.HasFlownToPlanetTwo;
+            bool delivered = gameManager != null && gameManager.ShrineDelivered;
 
             string json = "{\n" +
                           $"  \"mode\": \"{_mode}\",\n" +
@@ -513,8 +464,10 @@ namespace PocketPlanet
                           $"  \"p95FrameTimeMs\": {p95Ms:F2},\n" +
                           $"  \"p99FrameTimeMs\": {p99Ms:F2},\n" +
                           $"  \"onePercentLowFps\": {onePercentLowFps:F1},\n" +
-                          $"  \"collectedSeeds\": {seeds},\n" +
-                          $"  \"shipRepaired\": {(repaired ? "true" : "false")}\n" +
+                          $"  \"talkedToAstra\": {(talked ? "true" : "false")},\n" +
+                          $"  \"collectedSolarisCore\": {(hasCore ? "true" : "false")},\n" +
+                          $"  \"flewToObsidianDeadwood\": {(landedP2 ? "true" : "false")},\n" +
+                          $"  \"deliveredSolarisCore\": {(delivered ? "true" : "false")}\n" +
                           "}\n";
 
             if (!string.IsNullOrEmpty(_perfJsonPath))
