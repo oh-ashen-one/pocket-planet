@@ -1,0 +1,126 @@
+{
+  "Starberry": {
+    "fbx": "Starberry.fbx",
+    "source": "blender_procedural",
+    "triangles": 2976,
+    "parts": [
+      "Starberry"
+    ]
+  },
+  "StarSeed": {
+    "fbx": "StarSeed.fbx",
+    "source": "blender_procedural",
+    "triangles": 260,
+    "parts": [
+      "StarSeed"
+    ]
+  },
+  "BouncyShroom": {
+    "fbx": "BouncyShroom.fbx",
+    "source": "blender_procedural",
+    "triangles": 2736,
+    "parts": [
+      "BouncyShroom"
+    ]
+  },
+  "PushBall": {
+    "fbx": "PushBall.fbx",
+    "source": "blender_procedural",
+    "triangles": 1928,
+    "parts": [
+      "PushBall"
+    ]
+  },
+  "DominoBlock": {
+    "fbx": "DominoBlock.fbx",
+    "source": "blender_procedural",
+    "triangles": 152,
+    "parts": [
+      "DominoBlock"
+    ]
+  },
+  "CrystalLever": {
+    "fbx": "CrystalLever.fbx",
+    "source": "blender_procedural",
+    "triangles": 768,
+    "parts": [
+      "CrystalLever",
+      "LeverHandle"
+    ]
+  },
+  "UnfoldingBridge": {
+    "fbx": "UnfoldingBridge.fbx",
+    "source": "blender_procedural",
+    "triangles": 2500,
+    "parts": [
+      "UnfoldingBridge",
+      "BridgeSeg_0",
+      "BridgeSeg_1",
+      "BridgeSeg_2",
+      "BridgeSeg_3",
+      "BridgeSeg_4"
+    ]
+  },
+  "AlienPodHome": {
+    "fbx": "AlienPodHome.fbx",
+    "source": "blender_procedural",
+    "triangles": 3104,
+    "parts": [
+      "AlienPodHome"
+    ]
+  },
+  "PastelRockPlatform": {
+    "fbx": "PastelRockPlatform.fbx",
+    "source": "blender_procedural",
+    "triangles": 296,
+    "parts": [
+      "PastelRockPlatform"
+    ]
+  },
+  "GlowingFloraTuft": {
+    "fbx": "GlowingFloraTuft.fbx",
+    "source": "blender_procedural",
+    "triangles": 588,
+    "parts": [
+      "GlowingFloraTuft"
+    ]
+  },
+  "BloomPlant": {
+    "fbx": "BloomPlant.fbx",
+    "source": "blender_procedural",
+    "triangles": 5756,
+    "parts": [
+      "BloomPlant",
+      "BloomPetal_0",
+      "BloomPetal_1",
+      "BloomPetal_2",
+      "BloomPetal_3",
+      "BloomPetal_4",
+      "BloomPetal_5"
+    ]
+  },
+  "BloopCreature": {
+    "fbx": "BloopCreature.fbx",
+    "source": "customuse_glb:bloop_3d.glb",
+    "triangles": 9594,
+    "parts": [
+      "BloopCreature"
+    ]
+  },
+  "StarhopperShip": {
+    "fbx": "StarhopperShip.fbx",
+    "source": "customuse_glb:spaceship_3d.glb",
+    "triangles": 13526,
+    "parts": [
+      "StarhopperShip"
+    ]
+  },
+  "CustomuseFloraStatue": {
+    "fbx": "CustomuseFloraStatue.fbx",
+    "source": "customuse_glb:bloom_plant_3d.glb",
+    "triangles": 11343,
+    "parts": [
+      "CustomuseFloraStatue"
+    ]
+  }
+}

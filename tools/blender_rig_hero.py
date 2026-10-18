@@ -33,7 +33,7 @@ FPS = 30
 D = math.radians
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-INPUT_GLB = Path(argv[argv.index("--input-glb") + 1]) if "--input-glb" in argv else None
+INPUT_GLB = Path(argv[argv.index("--input-glb") + 1]) if "--input-glb" in argv else (ROOT / "tools/customuse_sources/pip_3d.glb")
 PREVIEW_DIR = Path(argv[argv.index("--preview-dir") + 1]) if "--preview-dir" in argv else None
 
 NATIVE_DIR.mkdir(parents=True, exist_ok=True)
@@ -286,24 +286,14 @@ def import_and_cleanup_customuse_glb(glb_path: Path):
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     me = body.data
-    # Check orientation: Customuse/Tripo/CR1 GLBs may face +Y or +X; ensure wide axis (arms/boots) is X and depth is Y
+    # Customuse CR1 GLBs face +X with arms along Y; rotate -90 deg around Z so +X becomes -Y (forward) and +Y becomes +X (right)
     xs = [v.co.x for v in me.vertices]
     ys = [v.co.y for v in me.vertices]
-    zs = [v.co.z for v in me.vertices]
     span_x = max(xs) - min(xs)
     span_y = max(ys) - min(ys)
-    if span_y > span_x * 1.18:
-        # Rotate +90 deg around Z so arms span along X
-        me.transform(Matrix.Rotation(D(90.0), 4, "Z"))
+    if span_y > span_x * 1.15:
+        me.transform(Matrix.Rotation(D(-90.0), 4, "Z"))
         me.update()
-
-    # Check front vs back: backpack adds volume on back (+Y). If more volume is on -Y, rotate 180 deg around Z
-    mid_z_verts = [v for v in me.vertices if 0.35 <= (v.co.z - min(zs)) / max(1e-4, max(zs) - min(zs)) <= 0.70]
-    if mid_z_verts:
-        avg_y = sum(v.co.y for v in mid_z_verts) / len(mid_z_verts)
-        if avg_y < -0.01:
-            me.transform(Matrix.Rotation(D(180.0), 4, "Z"))
-            me.update()
 
     # Mesh cleanup in bmesh: merge by distance & recalculate normals
     bm = bmesh.new()
@@ -326,24 +316,29 @@ def import_and_cleanup_customuse_glb(glb_path: Path):
         poly.use_smooth = True
     me.update()
 
-    # Save baked texture if present in imported material
+    # Save baked Base Color and Emission Color textures from Customuse GLB material
     albedo_out = ART_DIR / "Pip_Albedo.png"
     emission_out = ART_DIR / "Pip_Emission.png"
-    saved_tex = False
+    saved_albedo = False
+    saved_emission = False
     for mat in me.materials:
         if mat and mat.use_nodes:
             for node in mat.node_tree.nodes:
                 if node.type == "TEX_IMAGE" and node.image:
-                    node.image.filepath_raw = str(albedo_out)
-                    node.image.file_format = "PNG"
-                    node.image.save()
-                    saved_tex = True
-                    break
-        if saved_tex:
-            break
-    if not saved_tex:
+                    outs = [l.to_socket.name for out in node.outputs for l in out.links]
+                    if "Base Color" in outs and not saved_albedo:
+                        node.image.filepath_raw = str(albedo_out)
+                        node.image.file_format = "PNG"
+                        node.image.save()
+                        saved_albedo = True
+                    elif "Emission Color" in outs and not saved_emission:
+                        node.image.filepath_raw = str(emission_out)
+                        node.image.file_format = "PNG"
+                        node.image.save()
+                        saved_emission = True
+    if not saved_albedo:
         generate_pip_atlas(albedo_out, emission_out)
-    elif not emission_out.exists():
+    elif not saved_emission:
         em = np.zeros((512, 512, 4), dtype=np.uint8)
         em[:, :, 3] = 255
         save_rgba_png(em, emission_out, "pip_em_fallback")
@@ -351,8 +346,13 @@ def import_and_cleanup_customuse_glb(glb_path: Path):
     return body
 
 
+def smoothstep(edge0, edge1, x):
+    t = max(0.0, min(1.0, (x - edge0) / max(1e-6, edge1 - edge0)))
+    return t * t * (3.0 - 2.0 * t)
+
+
 def build_armature_and_skin(body_obj):
-    """Creates the 21-bone PipRig armature and assigns clean anatomical skin weights."""
+    """Creates the 22-bone PipRig armature and assigns smooth, tear-free anatomical skin weights."""
     arm_data = bpy.data.armatures.new("PipRigData")
     rig = bpy.data.objects.new("PipRig", arm_data)
     bpy.context.collection.objects.link(rig)
@@ -376,22 +376,22 @@ def build_armature_and_skin(body_obj):
     make_bone("Head", (0, 0, 0.72), (0, 0, 0.90), "Chest")
 
     # Floppy antennae chains
-    make_bone("AntennaL_1", (-0.08, 0.0, 0.89), (-0.15, -0.02, 1.04), "Head")
-    make_bone("AntennaL_2", (-0.15, -0.02, 1.04), (-0.25, -0.06, 0.93), "AntennaL_1")
-    make_bone("AntennaR_1", (0.08, 0.0, 0.89), (0.15, -0.02, 1.04), "Head")
-    make_bone("AntennaR_2", (0.15, -0.02, 1.04), (0.25, -0.06, 0.93), "AntennaR_1")
+    make_bone("AntennaL_1", (-0.08, 0.0, 0.90), (-0.16, -0.02, 1.05), "Head")
+    make_bone("AntennaL_2", (-0.16, -0.02, 1.05), (-0.27, -0.05, 0.94), "AntennaL_1")
+    make_bone("AntennaR_1", (0.08, 0.0, 0.90), (0.16, -0.02, 1.05), "Head")
+    make_bone("AntennaR_2", (0.16, -0.02, 1.05), (0.27, -0.05, 0.94), "AntennaR_1")
 
     # Backpack secondary-motion bone
     make_bone("Backpack", (0.0, 0.16, 0.56), (0.0, 0.32, 0.56), "Spine")
 
     # Left & Right arms (45-deg A-pose)
-    make_bone("UpperArmL", (-0.20, 0.0, 0.62), (-0.34, -0.02, 0.52), "Chest")
-    make_bone("LowerArmL", (-0.34, -0.02, 0.52), (-0.45, -0.04, 0.42), "UpperArmL")
-    make_bone("HandL", (-0.45, -0.04, 0.42), (-0.51, -0.06, 0.37), "LowerArmL")
+    make_bone("UpperArmL", (-0.21, 0.0, 0.61), (-0.34, -0.02, 0.51), "Chest")
+    make_bone("LowerArmL", (-0.34, -0.02, 0.51), (-0.44, -0.04, 0.41), "UpperArmL")
+    make_bone("HandL", (-0.44, -0.04, 0.41), (-0.51, -0.06, 0.35), "LowerArmL")
 
-    make_bone("UpperArmR", (0.20, 0.0, 0.62), (0.34, -0.02, 0.52), "Chest")
-    make_bone("LowerArmR", (0.34, -0.02, 0.52), (0.45, -0.04, 0.42), "UpperArmR")
-    make_bone("HandR", (0.45, -0.04, 0.42), (0.51, -0.06, 0.37), "LowerArmR")
+    make_bone("UpperArmR", (0.21, 0.0, 0.61), (0.34, -0.02, 0.51), "Chest")
+    make_bone("LowerArmR", (0.34, -0.02, 0.51), (0.44, -0.04, 0.41), "UpperArmR")
+    make_bone("HandR", (0.44, -0.04, 0.41), (0.51, -0.06, 0.35), "LowerArmR")
 
     # Left & Right legs + boots
     make_bone("UpperLegL", (-0.105, 0.0, 0.29), (-0.105, -0.01, 0.18), "Hips")
@@ -404,7 +404,6 @@ def build_armature_and_skin(body_obj):
 
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Parent mesh to armature and create vertex groups with smooth anatomical weights
     body_obj.parent = rig
     body_obj.matrix_parent_inverse = Matrix.Identity(4)
     mod = body_obj.modifiers.new(name="Armature", type="ARMATURE")
@@ -416,66 +415,91 @@ def build_armature_and_skin(body_obj):
 
     for v in me.vertices:
         x, y, z = v.co.x, v.co.y, v.co.z
-        weights = {}
+        ax = abs(x)
+        side = "L" if x < 0 else "R"
 
-        # 1. Antennae (z > 0.87 and |x| > 0.05)
-        if z > 0.87 and abs(x) > 0.055:
-            side = "L" if x < 0 else "R"
-            if abs(x) > 0.145 or z > 0.99:
-                weights[f"Antenna{side}_2"] = 0.85
-                weights[f"Antenna{side}_1"] = 0.15
-            else:
-                weights[f"Antenna{side}_1"] = 0.80
-                weights["Head"] = 0.20
-        # 2. Arms (|x| > 0.23 and 0.30 < z < 0.72)
-        elif abs(x) > 0.225 and 0.30 < z < 0.72 and y < 0.14:
-            side = "L" if x < 0 else "R"
-            ax = abs(x)
-            if ax > 0.42:
-                weights[f"Hand{side}"] = 0.85
-                weights[f"LowerArm{side}"] = 0.15
-            elif ax > 0.32:
-                weights[f"LowerArm{side}"] = 0.75
-                weights[f"UpperArm{side}"] = 0.25
-            else:
-                weights[f"UpperArm{side}"] = 0.75
-                weights["Chest"] = 0.25
-        # 3. Backpack (y > 0.17 and 0.36 < z < 0.74)
-        elif y > 0.175 and 0.36 < z < 0.74 and abs(x) < 0.19:
-            weights["Backpack"] = 0.85
-            weights["Spine"] = 0.15
-        # 4. Legs & Boots (z < 0.29)
-        elif z < 0.29:
-            side = "L" if x < 0 else "R"
-            if z < 0.13:
-                weights[f"Foot{side}"] = 0.90
-                weights[f"LowerLeg{side}"] = 0.10
-            elif z < 0.20:
-                weights[f"LowerLeg{side}"] = 0.75
-                weights[f"UpperLeg{side}"] = 0.25
-            else:
-                weights[f"UpperLeg{side}"] = 0.75
-                weights["Hips"] = 0.25
-        # 5. Core bean torso & head (smooth vertical blend so body never pinches)
+        # Base torso vertical weights (always smooth from z=0.25 to z=0.88)
+        torso_w = {}
+        if z >= 0.68:
+            t = smoothstep(0.68, 0.82, z)
+            torso_w["Head"] = t
+            torso_w["Chest"] = 1.0 - t
+        elif z >= 0.52:
+            t = smoothstep(0.52, 0.68, z)
+            torso_w["Chest"] = t
+            torso_w["Spine"] = 1.0 - t
+        elif z >= 0.34:
+            t = smoothstep(0.34, 0.52, z)
+            torso_w["Spine"] = t
+            torso_w["Hips"] = 1.0 - t
         else:
-            if z > 0.70:
-                t = min(1.0, (z - 0.70) / 0.12)
-                weights["Head"] = 0.5 + 0.5 * t
-                weights["Chest"] = 0.5 * (1.0 - t)
-            elif z > 0.56:
-                t = (z - 0.56) / 0.14
-                weights["Chest"] = 0.35 + 0.65 * t
-                weights["Spine"] = 0.65 * (1.0 - t)
-            elif z > 0.40:
-                t = (z - 0.40) / 0.16
-                weights["Spine"] = 0.35 + 0.65 * t
-                weights["Hips"] = 0.65 * (1.0 - t)
-            else:
-                weights["Hips"] = 1.0
+            torso_w["Hips"] = 1.0
+
+        weights = dict(torso_w)
+
+        # Smooth antenna blend above crown (z > 0.89)
+        ant_factor = smoothstep(0.89, 0.94, z)
+        if ant_factor > 0.0:
+            tip_t = smoothstep(0.14, 0.23, ax)
+            ant_w = {
+                f"Antenna{side}_1": 1.0 - tip_t,
+                f"Antenna{side}_2": tip_t,
+            }
+            for k in list(weights.keys()):
+                weights[k] *= (1.0 - ant_factor)
+            for k, val in ant_w.items():
+                weights[k] = weights.get(k, 0.0) + val * ant_factor
+
+        # Smooth arm blend outside shoulder cylinder (ax > 0.22, z from 0.24 to 0.68)
+        arm_x = smoothstep(0.22, 0.265, ax)
+        arm_z = smoothstep(0.24, 0.29, z) * (1.0 - smoothstep(0.62, 0.69, z))
+        # Arm vertices have y in [-0.068, 0.150]; backpack vertices have y > 0.175 and ax < 0.30
+        arm_y = (1.0 - smoothstep(0.145, 0.175, y)) if ax < 0.30 else 1.0
+        arm_factor = arm_x * arm_z * arm_y
+        if arm_factor > 0.0:
+            fore_t = smoothstep(0.29, 0.36, ax)
+            hand_t = smoothstep(0.38, 0.44, ax)
+            arm_w = {
+                f"UpperArm{side}": 1.0 - fore_t,
+                f"LowerArm{side}": fore_t * (1.0 - hand_t),
+                f"Hand{side}": fore_t * hand_t,
+            }
+            for k in list(weights.keys()):
+                weights[k] *= (1.0 - arm_factor)
+            for k, val in arm_w.items():
+                weights[k] = weights.get(k, 0.0) + val * arm_factor
+
+        # Subtle backpack secondary motion blend strictly on rear center protrusion (y > 0.19 and ax < 0.18)
+        bp_y = smoothstep(0.19, 0.25, y)
+        bp_z = smoothstep(0.40, 0.46, z) * (1.0 - smoothstep(0.65, 0.72, z))
+        bp_x = 1.0 - smoothstep(0.14, 0.19, ax)
+        bp_factor = bp_y * bp_z * bp_x * 0.35
+        if bp_factor > 0.0:
+            for k in list(weights.keys()):
+                weights[k] *= (1.0 - bp_factor)
+            weights["Backpack"] = weights.get("Backpack", 0.0) + bp_factor
+
+        # Smooth leg & boot blend below hip line (below z=0.23 all ax belongs to boots; above z=0.23 only ax < 0.22 and y < 0.08)
+        leg_x = 1.0 if z <= 0.23 else ((1.0 - smoothstep(0.19, 0.23, ax)) * (1.0 - smoothstep(0.04, 0.09, y)))
+        leg_factor = (1.0 - smoothstep(0.24, 0.30, z)) * leg_x
+        if leg_factor > 0.0:
+            shin_t = 1.0 - smoothstep(0.16, 0.22, z)
+            foot_t = 1.0 - smoothstep(0.09, 0.14, z)
+            leg_w = {
+                f"UpperLeg{side}": 1.0 - shin_t,
+                f"LowerLeg{side}": shin_t * (1.0 - foot_t),
+                f"Foot{side}": shin_t * foot_t,
+            }
+            for k in list(weights.keys()):
+                weights[k] *= (1.0 - leg_factor)
+            for k, val in leg_w.items():
+                weights[k] = weights.get(k, 0.0) + val * leg_factor
 
         total = sum(weights.values())
-        for bname, w in weights.items():
-            vgroups[bname].add([v.index], w / total, "REPLACE")
+        if total > 1e-6:
+            for bname, w in weights.items():
+                if w > 1e-4:
+                    vgroups[bname].add([v.index], w / total, "REPLACE")
 
     return rig
 
@@ -514,6 +538,7 @@ def author_all_animations(rig):
 
     def new_clip(name, end_frame, loop):
         act = bpy.data.actions.new(name=name)
+        act.use_fake_user = True
         rig.animation_data.action = act
         if hasattr(act, "slots"):
             if len(act.slots) == 0:
@@ -578,7 +603,7 @@ def author_all_animations(rig):
         set_rot(rig, "AntennaL_2", rx=14.0 + 16.0 * b_lag, rz=-10.0 * s)
         set_rot(rig, "AntennaR_1", rx=10.0 + 12.0 * b_lag, rz=-6.0 * s)
         set_rot(rig, "AntennaR_2", rx=14.0 + 16.0 * b_lag, rz=-10.0 * s)
-        set_rot(rig, "Backpack", rx=8.0 * b_lag, rz=5.0 * s)
+        set_rot(rig, "Backpack", rx=6.0 * b_lag, rz=3.0 * s)
         key_all(rig, f)
 
     # 3. Run (20 frames, 0.67s loop): energetic forward lean, wide stride, lively squash/stretch & floppy antennae
@@ -608,7 +633,7 @@ def author_all_animations(rig):
         set_rot(rig, "AntennaL_2", rx=30.0 + 18.0 * bob, rz=-12.0 * s)
         set_rot(rig, "AntennaR_1", rx=24.0 + 14.0 * bob, rz=-8.0 * s)
         set_rot(rig, "AntennaR_2", rx=30.0 + 18.0 * bob, rz=-12.0 * s)
-        set_rot(rig, "Backpack", rx=14.0 * bob, ry=8.0 * s)
+        set_rot(rig, "Backpack", rx=8.0 * bob, ry=5.0 * s)
         key_all(rig, f)
 
     # 4. Turn (18 frames, 0.6s): playful pivot step with anticipation & follow-through
@@ -636,26 +661,26 @@ def author_all_animations(rig):
 
     # 5. Jump (20 frames, 0.67s): anticipation squash crouch -> upward stretch launch -> apex pose
     new_clip("Jump", 20, False)
-    for f, (hy, sx, sy, arm_ry, leg_l, leg_r, ant_rx) in [
-        (0, (-0.07, 1.10, 0.86, 26.0, -28.0, -28.0, -14.0)),
-        (4, (0.06, 0.90, 1.14, -38.0, 22.0, -32.0, 28.0)),
-        (11, (0.10, 0.95, 1.06, -48.0, -34.0, 26.0, 34.0)),
-        (20, (0.08, 1.00, 1.00, -35.0, -24.0, 18.0, 22.0)),
+    for f, (hy, spine_rx, arm_rz, leg_l, leg_r, ant_rx) in [
+        (0, (-0.06, 14.0, -18.0, -26.0, -26.0, -14.0)),
+        (4, (0.05, -10.0, 48.0, 20.0, -30.0, 26.0)),
+        (11, (0.08, -6.0, 56.0, -30.0, 24.0, 32.0)),
+        (20, (0.06, 0.0, 44.0, -22.0, 16.0, 20.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
-        set_scl(rig, "Spine", sx=sx, sy=sy, sz=sx)
-        set_rot(rig, "UpperArmL", ry=arm_ry, rx=-25.0)
-        set_rot(rig, "UpperArmR", ry=-arm_ry, rx=-25.0)
+        set_rot(rig, "Spine", rx=spine_rx)
+        set_rot(rig, "UpperArmL", rz=arm_rz, rx=18.0)
+        set_rot(rig, "UpperArmR", rz=-arm_rz, rx=18.0)
         set_rot(rig, "UpperLegL", rx=leg_l)
-        set_rot(rig, "LowerLegL", rx=26.0)
+        set_rot(rig, "LowerLegL", rx=24.0)
         set_rot(rig, "UpperLegR", rx=leg_r)
-        set_rot(rig, "LowerLegR", rx=26.0)
+        set_rot(rig, "LowerLegR", rx=24.0)
         set_rot(rig, "AntennaL_1", rx=ant_rx)
         set_rot(rig, "AntennaL_2", rx=ant_rx * 1.3)
         set_rot(rig, "AntennaR_1", rx=ant_rx)
         set_rot(rig, "AntennaR_2", rx=ant_rx * 1.3)
-        set_rot(rig, "Backpack", rx=ant_rx * 0.5)
+        set_rot(rig, "Backpack", rx=ant_rx * 0.3)
         key_all(rig, f)
 
     # 6. Fall (24 frames, 0.8s loop): mid-air paddle & antennae swept up
@@ -666,8 +691,8 @@ def author_all_animations(rig):
         s = math.sin(ph)
         set_rot(rig, "Spine", rx=-8.0, rz=4.0 * s)
         set_rot(rig, "Head", rx=12.0)
-        set_rot(rig, "UpperArmL", ry=-32.0 + 10.0 * s, rx=-15.0 * s)
-        set_rot(rig, "UpperArmR", ry=32.0 + 10.0 * s, rx=15.0 * s)
+        set_rot(rig, "UpperArmL", rz=38.0 + 10.0 * s, rx=15.0 * s)
+        set_rot(rig, "UpperArmR", rz=-38.0 + 10.0 * s, rx=-15.0 * s)
         set_rot(rig, "UpperLegL", rx=-22.0 + 16.0 * s)
         set_rot(rig, "LowerLegL", rx=32.0)
         set_rot(rig, "UpperLegR", rx=-22.0 - 16.0 * s)
@@ -676,20 +701,20 @@ def author_all_animations(rig):
         set_rot(rig, "AntennaL_2", rx=-36.0 + 10.0 * s)
         set_rot(rig, "AntennaR_1", rx=-28.0 - 8.0 * s, rz=12.0)
         set_rot(rig, "AntennaR_2", rx=-36.0 - 10.0 * s)
-        set_rot(rig, "Backpack", rx=-18.0)
+        set_rot(rig, "Backpack", rx=-10.0)
         key_all(rig, f)
 
     # 7. Landing (16 frames, 0.53s): visible squash absorption -> recoil overshoot -> settle
     new_clip("Landing", 16, False)
-    for f, (hy, sx, sy, knee_rx, arm_ry, ant_rx) in [
-        (0, (0.02, 0.96, 1.05, 16.0, -20.0, -18.0)),
-        (4, (-0.09, 1.15, 0.82, 42.0, 28.0, 32.0)),
-        (10, (0.02, 0.97, 1.04, 10.0, 18.0, -10.0)),
-        (16, (0.0, 1.00, 1.00, 0.0, 22.0, 0.0)),
+    for f, (hy, spine_rx, knee_rx, arm_ry, ant_rx) in [
+        (0, (0.02, -6.0, 16.0, -18.0, -18.0)),
+        (4, (-0.08, 18.0, 38.0, 24.0, 28.0)),
+        (10, (0.02, -4.0, 10.0, 18.0, -10.0)),
+        (16, (0.0, 0.0, 0.0, 22.0, 0.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
-        set_scl(rig, "Spine", sx=sx, sy=sy, sz=sx)
+        set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "UpperLegL", rx=-knee_rx * 0.7)
         set_rot(rig, "LowerLegL", rx=knee_rx)
         set_rot(rig, "UpperLegR", rx=-knee_rx * 0.7)
@@ -700,25 +725,25 @@ def author_all_animations(rig):
         set_rot(rig, "AntennaL_2", rx=ant_rx * 1.3)
         set_rot(rig, "AntennaR_1", rx=ant_rx)
         set_rot(rig, "AntennaR_2", rx=ant_rx * 1.3)
-        set_rot(rig, "Backpack", rx=ant_rx * 0.6)
+        set_rot(rig, "Backpack", rx=ant_rx * 0.35)
         key_all(rig, f)
 
     # 8. Pickup (22 frames, 0.73s): bend down, reach both hands forward to meet oversized fruit, lift to chest
     new_clip("Pickup", 22, False)
-    for f, (hy, spine_rx, arm_rx, arm_ry, elbow_rx) in [
-        (0, (0.0, 0.0, 0.0, 20.0, 14.0)),
-        (8, (-0.08, 28.0, -52.0, 12.0, 24.0)),
-        (15, (-0.03, 10.0, -64.0, 18.0, 38.0)),
-        (22, (-0.02, -10.0, -58.0, 22.0, 42.0)),
+    for f, (hy, spine_rx, arm_rx, arm_rz, elbow_rx) in [
+        (0, (0.0, 0.0, 0.0, 0.0, 14.0)),
+        (8, (-0.08, 28.0, -52.0, 22.0, 24.0)),
+        (15, (-0.03, 10.0, -58.0, 28.0, 34.0)),
+        (22, (-0.02, -10.0, -54.0, 26.0, 36.0)),
     ]:
         reset_pose(rig)
         set_loc(rig, "Hips", y=hy)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Head", rx=-spine_rx * 0.5)
-        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry, rz=-16.0)
-        set_rot(rig, "LowerArmL", rx=elbow_rx, rz=-18.0)
-        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry, rz=16.0)
-        set_rot(rig, "LowerArmR", rx=elbow_rx, rz=18.0)
+        set_rot(rig, "UpperArmL", rx=arm_rx, rz=arm_rz)
+        set_rot(rig, "LowerArmL", rx=elbow_rx, rz=18.0)
+        set_rot(rig, "UpperArmR", rx=arm_rx, rz=-arm_rz)
+        set_rot(rig, "LowerArmR", rx=elbow_rx, rz=-18.0)
         set_rot(rig, "UpperLegL", rx=-abs(hy) * 220.0)
         set_rot(rig, "LowerLegL", rx=abs(hy) * 320.0)
         set_rot(rig, "UpperLegR", rx=-abs(hy) * 220.0)
@@ -739,13 +764,13 @@ def author_all_animations(rig):
         set_rot(rig, "Spine", rx=-12.0 + 3.0 * bob, rz=-4.0 * s)
         set_rot(rig, "Chest", rx=-6.0)
         set_rot(rig, "Head", rx=14.0, rz=4.0 * s)
-        # Both arms forward & inward so hands meet the oversized fruit at (0, -0.36, 0.58)
-        set_rot(rig, "UpperArmL", rx=-58.0 + 3.0 * bob, ry=22.0, rz=-22.0)
-        set_rot(rig, "LowerArmL", rx=42.0, rz=-20.0)
-        set_rot(rig, "HandL", rz=-15.0)
-        set_rot(rig, "UpperArmR", rx=-58.0 + 3.0 * bob, ry=-22.0, rz=22.0)
-        set_rot(rig, "LowerArmR", rx=42.0, rz=20.0)
-        set_rot(rig, "HandR", rz=15.0)
+        # Both arms forward & inward so hands meet the oversized fruit in front of chest
+        set_rot(rig, "UpperArmL", rx=-54.0 + 3.0 * bob, rz=26.0)
+        set_rot(rig, "LowerArmL", rx=-28.0, rz=20.0)
+        set_rot(rig, "HandL", rz=15.0)
+        set_rot(rig, "UpperArmR", rx=-54.0 + 3.0 * bob, rz=-26.0)
+        set_rot(rig, "LowerArmR", rx=-28.0, rz=-20.0)
+        set_rot(rig, "HandR", rz=-15.0)
         # Shorter, wider-legged weighted stride
         set_rot(rig, "UpperLegL", rx=-26.0 * s - 10.0)
         set_rot(rig, "LowerLegL", rx=max(0.0, 24.0 * c) + 16.0)
@@ -759,18 +784,18 @@ def author_all_animations(rig):
 
     # 10. Throw (20 frames, 0.67s): wind-up lean back -> energetic forward hurl + follow-through
     new_clip("Throw", 20, False)
-    for f, (spine_rx, arm_rx, arm_ry, ant_rx) in [
-        (0, (-14.0, -58.0, 22.0, -14.0)),
-        (5, (-24.0, -82.0, 10.0, -26.0)),
-        (11, (26.0, -32.0, -14.0, 34.0)),
-        (20, (0.0, 0.0, 22.0, 0.0)),
+    for f, (spine_rx, arm_rx, arm_rz, ant_rx) in [
+        (0, (-14.0, -54.0, 26.0, -14.0)),
+        (5, (-24.0, -68.0, 38.0, -26.0)),
+        (11, (26.0, -32.0, 12.0, 34.0)),
+        (20, (0.0, 0.0, 0.0, 0.0)),
     ]:
         reset_pose(rig)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Chest", rx=spine_rx * 0.5)
         set_rot(rig, "Head", rx=-spine_rx * 0.4)
-        set_rot(rig, "UpperArmL", rx=arm_rx, ry=arm_ry)
-        set_rot(rig, "UpperArmR", rx=arm_rx, ry=-arm_ry)
+        set_rot(rig, "UpperArmL", rx=arm_rx, rz=arm_rz)
+        set_rot(rig, "UpperArmR", rx=arm_rx, rz=-arm_rz)
         set_rot(rig, "AntennaL_1", rx=ant_rx)
         set_rot(rig, "AntennaL_2", rx=ant_rx * 1.3)
         set_rot(rig, "AntennaR_1", rx=ant_rx)
@@ -779,19 +804,19 @@ def author_all_animations(rig):
 
     # 11. Interact (24 frames, 0.8s): friendly reach / pet / lever pull gesture
     new_clip("Interact", 24, False)
-    for f, (spine_rx, r_arm_rx, r_arm_ry, l_arm_ry, head_rz) in [
-        (0, (0.0, 0.0, -22.0, 22.0, 0.0)),
-        (7, (14.0, -68.0, -8.0, 24.0, 8.0)),
-        (13, (12.0, -54.0, -18.0, 24.0, -8.0)),
-        (18, (14.0, -68.0, -8.0, 24.0, 6.0)),
-        (24, (0.0, 0.0, -22.0, 22.0, 0.0)),
+    for f, (spine_rx, r_arm_rx, r_arm_rz, l_arm_rz, head_rz) in [
+        (0, (0.0, 0.0, 0.0, 0.0, 0.0)),
+        (7, (14.0, -58.0, -28.0, -10.0, 8.0)),
+        (13, (12.0, -46.0, -20.0, -10.0, -8.0)),
+        (18, (14.0, -58.0, -28.0, -10.0, 6.0)),
+        (24, (0.0, 0.0, 0.0, 0.0, 0.0)),
     ]:
         reset_pose(rig)
         set_rot(rig, "Spine", rx=spine_rx)
         set_rot(rig, "Head", rz=head_rz, rx=-spine_rx * 0.3)
-        set_rot(rig, "UpperArmR", rx=r_arm_rx, ry=r_arm_ry)
-        set_rot(rig, "LowerArmR", rx=28.0)
-        set_rot(rig, "UpperArmL", ry=l_arm_ry)
+        set_rot(rig, "UpperArmR", rx=r_arm_rx, rz=r_arm_rz)
+        set_rot(rig, "LowerArmR", rx=-24.0)
+        set_rot(rig, "UpperArmL", rz=l_arm_rz)
         set_rot(rig, "AntennaL_1", rz=head_rz * 1.4)
         set_rot(rig, "AntennaR_1", rz=head_rz * 1.4)
         key_all(rig, f)
@@ -804,23 +829,23 @@ def author_all_animations(rig):
         s = math.sin(ph * 2.0)
         c = math.cos(ph * 2.0)
         hop = max(0.0, math.sin(ph * 2.0))
-        set_loc(rig, "Hips", y=0.09 * hop)
-        set_rot(rig, "Hips", ry=18.0 * math.sin(ph), rz=8.0 * s)
-        set_rot(rig, "Spine", rx=-8.0 * hop, rz=6.0 * s)
-        set_rot(rig, "Head", rz=-10.0 * s, rx=-6.0)
-        # Raised cheering arms
-        set_rot(rig, "UpperArmL", ry=-48.0 + 14.0 * s, rx=-20.0)
-        set_rot(rig, "LowerArmL", rz=-20.0 * c)
-        set_rot(rig, "UpperArmR", ry=48.0 + 14.0 * s, rx=-20.0)
-        set_rot(rig, "LowerArmR", rz=20.0 * c)
-        set_rot(rig, "UpperLegL", rx=-24.0 * hop, rz=-8.0 * hop)
-        set_rot(rig, "LowerLegL", rx=32.0 * hop)
-        set_rot(rig, "UpperLegR", rx=-24.0 * hop, rz=8.0 * hop)
-        set_rot(rig, "LowerLegR", rx=32.0 * hop)
-        set_rot(rig, "AntennaL_1", rx=18.0 * c, rz=16.0 * s)
-        set_rot(rig, "AntennaL_2", rx=24.0 * c, rz=22.0 * s)
-        set_rot(rig, "AntennaR_1", rx=-18.0 * c, rz=16.0 * s)
-        set_rot(rig, "AntennaR_2", rx=-24.0 * c, rz=22.0 * s)
+        set_loc(rig, "Hips", y=0.08 * hop)
+        set_rot(rig, "Hips", ry=16.0 * math.sin(ph), rz=6.0 * s)
+        set_rot(rig, "Spine", rx=-6.0 * hop, rz=5.0 * s)
+        set_rot(rig, "Head", rz=-8.0 * s, rx=-6.0)
+        # Raised cheering arms (rz+54 on L, rz-54 on R lifts hands high up!)
+        set_rot(rig, "UpperArmL", rz=54.0 + 12.0 * s, rx=22.0)
+        set_rot(rig, "LowerArmL", rz=18.0 * c)
+        set_rot(rig, "UpperArmR", rz=-54.0 + 12.0 * s, rx=22.0)
+        set_rot(rig, "LowerArmR", rz=-18.0 * c)
+        set_rot(rig, "UpperLegL", rx=-22.0 * hop, rz=-6.0 * hop)
+        set_rot(rig, "LowerLegL", rx=28.0 * hop)
+        set_rot(rig, "UpperLegR", rx=-22.0 * hop, rz=6.0 * hop)
+        set_rot(rig, "LowerLegR", rx=28.0 * hop)
+        set_rot(rig, "AntennaL_1", rx=16.0 * c, rz=14.0 * s)
+        set_rot(rig, "AntennaL_2", rx=22.0 * c, rz=18.0 * s)
+        set_rot(rig, "AntennaR_1", rx=-16.0 * c, rz=14.0 * s)
+        set_rot(rig, "AntennaR_2", rx=-22.0 * c, rz=18.0 * s)
         key_all(rig, f)
 
     return actions
@@ -836,14 +861,6 @@ def bind_blender_material(body_obj, albedo_path: Path, emission_path: Path):
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = bpy.data.images.load(str(albedo_path))
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-
-    if emission_path.exists():
-        etex = nt.nodes.new("ShaderNodeTexImage")
-        etex.image = bpy.data.images.load(str(emission_path))
-        if "Emission Color" in bsdf.inputs:
-            nt.links.new(etex.outputs["Color"], bsdf.inputs["Emission Color"])
-        if "Emission Strength" in bsdf.inputs:
-            bsdf.inputs["Emission Strength"].default_value = 1.8
 
     body_obj.data.materials.clear()
     body_obj.data.materials.append(mat)
@@ -900,8 +917,8 @@ def main():
         path_mode="STRIP",
     )
 
-    # Export each animation clip as Pip<ClipName>.fbx
-    select_only(rig)
+    # Export each animation clip as Pip<ClipName>.fbx with identical (rig, body) hierarchy so all curve paths match PipRig/Root/... directly
+    select_only(rig, body)
     clip_report = {}
     for cname, (act, end_frame, loop) in actions.items():
         rig.animation_data.action = act
@@ -913,7 +930,7 @@ def main():
         bpy.ops.export_scene.fbx(
             filepath=str(clip_fbx),
             use_selection=True,
-            object_types={"ARMATURE"},
+            object_types={"ARMATURE", "MESH"},
             add_leaf_bones=False,
             bake_anim=True,
             bake_anim_use_all_actions=False,

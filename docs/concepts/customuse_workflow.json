@@ -2,7 +2,7 @@
   "workflowId": "c16a4ff6-58f4-4156-8cff-5a9ae5551ec8",
   "canvasUrl": "https://customuse.com/workflow/c16a4ff6-58f4-4156-8cff-5a9ae5551ec8",
   "balanceVerifiedBefore": 2876,
-  "creditsSpentSoFar": 0,
+  "creditsSpentSoFar": 280,
   "uploads": {
     "pip_front": "f54f511c-9b29-4812-8b9f-7371211dc0ee",
     "pip_side": "c4578776-82be-41c8-a9b0-4053e1dc2fd6",
@@ -16,5 +16,40 @@
     "bloop_3d": "1ebf94ae-f730-4246-a1e3-64307ab4a11b",
     "spaceship_3d": "540baa10-d7f6-4600-9fb8-9cd8b800eead",
     "bloom_plant_3d": "eca42de4-3e04-47ee-8a4e-8acc7e54c43f"
-  }
+  },
+  "results": {
+    "bloop_3d": {
+      "nodeId": "1ebf94ae-f730-4246-a1e3-64307ab4a11b",
+      "status": "complete",
+      "meshUrl": "https://public.customuse.com/uploader/files/598b0c9e-2100-4474-950b-b361a4100ace/68f0ccc8-d285-4df6-bdf7-1612573e41e5.glb",
+      "previewUrl": null,
+      "localPath": "tools/customuse_sources/bloop_3d.glb",
+      "bytes": 4672636
+    },
+    "pip_3d": {
+      "nodeId": "c3394202-10bc-406b-80d9-a002b17e3d42",
+      "status": "complete",
+      "meshUrl": "https://public.customuse.com/uploader/files/3b66b309-b1f4-493f-9a3b-20f64df61cde/a0e1b935-3d1c-4f79-bb46-d7296bb4faa5.glb",
+      "previewUrl": null,
+      "localPath": "tools/customuse_sources/pip_3d.glb",
+      "bytes": 5374592
+    },
+    "spaceship_3d": {
+      "nodeId": "540baa10-d7f6-4600-9fb8-9cd8b800eead",
+      "status": "complete",
+      "meshUrl": "https://public.customuse.com/uploader/files/718231b1-a7f5-454f-a425-7102beace0ce/a6227b85-b5ef-4210-a708-989981787e75.glb",
+      "previewUrl": null,
+      "localPath": "tools/customuse_sources/spaceship_3d.glb",
+      "bytes": 5716100
+    },
+    "bloom_plant_3d": {
+      "nodeId": "eca42de4-3e04-47ee-8a4e-8acc7e54c43f",
+      "status": "complete",
+      "meshUrl": "https://public.customuse.com/uploader/files/5da808a5-5fee-414e-9d52-d16960da2e89/043cb9a3-d149-4ff9-a1df-3b9800cdd97c.glb",
+      "previewUrl": null,
+      "localPath": "tools/customuse_sources/bloom_plant_3d.glb",
+      "bytes": 5685276
+    }
+  },
+  "balanceAfterRun": 2596
 }

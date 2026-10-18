@@ -1,0 +1,14 @@
+{
+  "mode": "milestone1",
+  "samples": 252,
+  "resolution": "1280x720",
+  "qualityLevel": "Ultra",
+  "avgFrameTimeMs": 17.56,
+  "avgFps": 56.9,
+  "p50FrameTimeMs": 16.67,
+  "p95FrameTimeMs": 16.71,
+  "p99FrameTimeMs": 33.09,
+  "onePercentLowFps": 30.2,
+  "collectedSeeds": 0,
+  "shipRepaired": false
+}

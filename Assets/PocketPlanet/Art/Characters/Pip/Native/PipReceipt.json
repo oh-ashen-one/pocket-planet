@@ -1,11 +1,11 @@
 {
-  "source": "blender_authored_pip",
-  "height_m": 1.057,
-  "width_m": 1.0472,
-  "depth_m": 0.597,
+  "source": "customuse_glb:pip_3d.glb",
+  "height_m": 1.15,
+  "width_m": 1.0195,
+  "depth_m": 0.6234,
   "min_z": 0.0,
-  "vertices": 6220,
-  "triangles": 12252,
+  "vertices": 7244,
+  "triangles": 14352,
   "bones": 22,
   "clips": {
     "Idle": {
