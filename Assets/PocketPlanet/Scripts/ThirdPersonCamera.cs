@@ -14,7 +14,7 @@ namespace PocketPlanet
         public float pitch = 19f;
         public float minPitch = -8f;
         public float maxPitch = 68f;
-        public float mouseSensitivity = 0.14f;
+        public float mouseSensitivity = 0.22f;
         public float gamepadYawSpeed = 125f;
         public float gamepadPitchSpeed = 85f;
         public float followSmoothTime = 0.03f;
@@ -24,8 +24,11 @@ namespace PocketPlanet
         private Vector3 _smoothedPivot;
         private Vector3 _pivotVel;
         private float _currentDist;
-        private bool _cursorLocked;
+        private bool _mouseLookPaused;
         private bool _externalControl;
+        private Vector2 _lastMousePos;
+        private bool _hasLastMousePos;
+        private int _lockTransitionFrames;
 
         public void SetExternalControl(bool enabled)
         {
@@ -49,6 +52,55 @@ namespace PocketPlanet
             _currentDist = distance;
             if (target != null)
                 _smoothedPivot = target.position + targetOffset;
+
+            _lastMousePos = ReadScreenMousePos();
+            _hasLastMousePos = true;
+            _mouseLookPaused = false;
+        }
+
+        private static Vector2 ReadScreenMousePos()
+        {
+            Vector2 legacyPos = (Vector2)Input.mousePosition;
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                Vector2 newPos = mouse.position.ReadValue();
+                if (newPos.sqrMagnitude > 0.01f)
+                    return newPos;
+            }
+            return legacyPos;
+        }
+
+        public static Vector2 ReadCombinedMouseDelta(ref Vector2 lastScreenPos, ref bool hasLastPos, int skipPosDiffFrames = 0)
+        {
+            Vector2 bestDelta = Vector2.zero;
+
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                Vector2 sysDelta = mouse.delta.ReadValue();
+                if (sysDelta.sqrMagnitude > bestDelta.sqrMagnitude)
+                    bestDelta = sysDelta;
+            }
+
+            Vector2 axisDelta = new Vector2(Input.GetAxisRaw("Mouse X") * 16f, Input.GetAxisRaw("Mouse Y") * 16f);
+            if (axisDelta.sqrMagnitude > bestDelta.sqrMagnitude)
+            {
+                bestDelta = axisDelta;
+            }
+
+            Vector2 curPos = ReadScreenMousePos();
+            if (hasLastPos && skipPosDiffFrames <= 0)
+            {
+                Vector2 posDiff = curPos - lastScreenPos;
+                if (posDiff.magnitude < 200f && posDiff.sqrMagnitude > bestDelta.sqrMagnitude)
+                {
+                    bestDelta = posDiff;
+                }
+            }
+            lastScreenPos = curPos;
+            hasLastPos = true;
+            return bestDelta;
         }
 
         private void LateUpdate()
@@ -91,37 +143,49 @@ namespace PocketPlanet
             var mouse = Mouse.current;
             var pad = Gamepad.current;
 
-            bool escPressed = Input.GetKeyDown(KeyCode.Escape) || (kb != null && kb.escapeKey.wasPressedThisFrame);
-            bool rightClickDown = Input.GetMouseButtonDown(1) || (mouse != null && mouse.rightButton.wasPressedThisFrame);
+            if (_lockTransitionFrames > 0)
+                _lockTransitionFrames--;
 
-            if (escPressed)
+            var gm = PocketPlanetGameManager.Instance;
+            bool victoryModalActive = gm != null && (gm.ShrineDelivered || gm.ShipRepaired);
+
+            if (victoryModalActive)
             {
-                _cursorLocked = false;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                if (Cursor.lockState != CursorLockMode.None)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    _lockTransitionFrames = 2;
+                }
             }
-            else if (rightClickDown)
+            else
             {
-                _cursorLocked = true;
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                bool escPressed = Input.GetKeyDown(KeyCode.Escape) || (kb != null && kb.escapeKey.wasPressedThisFrame);
+                bool anyMouseClick = Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)
+                    || (mouse != null && (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame));
+
+                if (escPressed)
+                {
+                    _mouseLookPaused = !_mouseLookPaused;
+                    Cursor.lockState = _mouseLookPaused ? CursorLockMode.None : CursorLockMode.Locked;
+                    Cursor.visible = _mouseLookPaused;
+                    _lockTransitionFrames = 2;
+                }
+                else if (anyMouseClick && (_mouseLookPaused || Cursor.lockState != CursorLockMode.Locked))
+                {
+                    _mouseLookPaused = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                    _lockTransitionFrames = 2;
+                }
             }
 
-            bool rotateMouse = _cursorLocked
-                || Input.GetMouseButton(0)
-                || Input.GetMouseButton(1)
-                || (mouse != null && (mouse.rightButton.isPressed || mouse.leftButton.isPressed));
-
-            if (rotateMouse)
+            Vector2 delta = ReadCombinedMouseDelta(ref _lastMousePos, ref _hasLastMousePos, _lockTransitionFrames);
+            if (!_mouseLookPaused && delta.sqrMagnitude > 0.0001f)
             {
-                Vector2 delta = Vector2.zero;
-                if (mouse != null)
-                    delta = mouse.delta.ReadValue();
-                if (delta.sqrMagnitude < 0.0001f)
-                    delta = new Vector2(Input.GetAxisRaw("Mouse X") * 12f, Input.GetAxisRaw("Mouse Y") * 12f);
-
-                yaw += delta.x * mouseSensitivity;
-                pitch = Mathf.Clamp(pitch - delta.y * mouseSensitivity, minPitch, maxPitch);
+                float sens = Mathf.Max(mouseSensitivity, 0.25f);
+                yaw += delta.x * sens;
+                pitch = Mathf.Clamp(pitch - delta.y * sens, minPitch, maxPitch);
             }
 
             float scroll = 0f;
@@ -145,10 +209,10 @@ namespace PocketPlanet
                 }
             }
 
-            bool orbitLeft = Input.GetKey(KeyCode.Q) || (kb != null && kb.qKey.isPressed);
-            bool orbitRight = Input.GetKey(KeyCode.E) || (kb != null && kb.eKey.isPressed);
-            if (orbitLeft) yaw -= 85f * Time.deltaTime;
-            if (orbitRight) yaw += 85f * Time.deltaTime;
+            bool orbitLeft = Input.GetKey(KeyCode.LeftBracket) || (kb != null && kb.leftBracketKey.isPressed);
+            bool orbitRight = Input.GetKey(KeyCode.RightBracket) || (kb != null && kb.rightBracketKey.isPressed);
+            if (orbitLeft) yaw -= 95f * Time.deltaTime;
+            if (orbitRight) yaw += 95f * Time.deltaTime;
         }
     }
 }

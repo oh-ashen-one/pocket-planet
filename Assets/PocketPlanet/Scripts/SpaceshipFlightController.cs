@@ -96,6 +96,9 @@ namespace PocketPlanet
             HandleSpaceFlight(Time.deltaTime);
         }
 
+        private Vector2 _lastFlightMousePos;
+        private bool _hasLastFlightMousePos;
+
         private void HandleSpaceFlight(float dt)
         {
             var kb = Keyboard.current;
@@ -121,6 +124,13 @@ namespace PocketPlanet
                 }
                 if (Mathf.Abs(steerX) < 0.01f) steerX = Input.GetAxisRaw("Horizontal");
                 if (Mathf.Abs(steerY) < 0.01f) steerY = Input.GetAxisRaw("Vertical");
+
+                Vector2 mouseDelta = ThirdPersonCamera.ReadCombinedMouseDelta(ref _lastFlightMousePos, ref _hasLastFlightMousePos);
+                if (mouseDelta.sqrMagnitude > 0.01f)
+                {
+                    steerX = Mathf.Clamp(steerX + mouseDelta.x * 0.08f, -1f, 1f);
+                    steerY = Mathf.Clamp(steerY + mouseDelta.y * 0.08f, -1f, 1f);
+                }
 
                 if (pad != null)
                 {
