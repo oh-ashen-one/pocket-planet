@@ -18,6 +18,17 @@ namespace PocketPlanet
 
         public bool IsAttuned => _isAttuned;
 
+        private void Awake()
+        {
+            if (GetComponent<Collider>() == null)
+            {
+                SphereCollider sc = gameObject.AddComponent<SphereCollider>();
+                sc.center = new Vector3(0f, 1.0f, 0f);
+                sc.radius = 1.6f;
+                sc.isTrigger = true;
+            }
+        }
+
         private void Update()
         {
             float t = Time.time;

@@ -11,6 +11,17 @@ namespace PocketPlanet
 
         private Vector3 _basePos;
 
+        private void Awake()
+        {
+            if (GetComponent<Collider>() == null)
+            {
+                SphereCollider sc = gameObject.AddComponent<SphereCollider>();
+                sc.center = new Vector3(0f, 0.5f, 0f);
+                sc.radius = 1.6f;
+                sc.isTrigger = true;
+            }
+        }
+
         private void Start()
         {
             if (visualRoot == null)
@@ -33,6 +44,15 @@ namespace PocketPlanet
             {
                 corePointLight.intensity = 3.2f + Mathf.Sin(t * 4.5f) * 0.65f;
             }
+
+            var gm = PocketPlanetGameManager.Instance;
+            if (gm != null && gm.player != null && !gm.player.IsInVehicle)
+            {
+                if (Vector3.Distance(gm.player.transform.position, transform.position) <= 1.85f)
+                {
+                    CollectRelic(gm.player);
+                }
+            }
         }
 
         private void OnTriggerEnter(Collider other)
@@ -52,7 +72,7 @@ namespace PocketPlanet
 
         public bool CanInteract(PipCharacterController player)
         {
-            return !IsCollected && player != null && Vector3.Distance(player.transform.position, transform.position) <= 4.0f;
+            return !IsCollected && player != null && Vector3.Distance(player.transform.position, transform.position) <= 4.6f;
         }
 
         public string GetPromptText(PipCharacterController player)

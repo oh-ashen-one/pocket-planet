@@ -13,6 +13,17 @@ namespace PocketPlanet
 
         private Transform _placedCoreVisual;
 
+        private void Awake()
+        {
+            if (GetComponent<Collider>() == null)
+            {
+                SphereCollider sc = gameObject.AddComponent<SphereCollider>();
+                sc.center = new Vector3(0f, 1.0f, 0f);
+                sc.radius = 2.2f;
+                sc.isTrigger = true;
+            }
+        }
+
         private void Start()
         {
             if (ignitedBeamColumn != null)

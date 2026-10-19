@@ -61,6 +61,13 @@ namespace PocketPlanet
         private void Awake()
         {
             Instance = this;
+            if (GetComponent<Collider>() == null)
+            {
+                SphereCollider sc = gameObject.AddComponent<SphereCollider>();
+                sc.center = new Vector3(0f, 0.8f, 0f);
+                sc.radius = 2.6f;
+                sc.isTrigger = true;
+            }
         }
 
         private void Start()
@@ -300,7 +307,7 @@ namespace PocketPlanet
         public bool CanInteract(PipCharacterController player)
         {
             if (IsInFlight || player == null) return false;
-            return Vector3.Distance(player.transform.position, transform.position) <= 5.5f;
+            return Vector3.Distance(player.transform.position, transform.position) <= 6.2f;
         }
 
         public string GetPromptText(PipCharacterController player)

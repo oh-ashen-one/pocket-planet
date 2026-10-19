@@ -41,6 +41,17 @@ namespace PocketPlanet
 
         public bool IsDialogueOpen => _lineIndex >= 0;
 
+        private void Awake()
+        {
+            if (GetComponent<Collider>() == null)
+            {
+                CapsuleCollider cc = gameObject.AddComponent<CapsuleCollider>();
+                cc.center = new Vector3(0f, 0.85f, 0f);
+                cc.radius = 0.48f;
+                cc.height = 1.7f;
+            }
+        }
+
         private void Start()
         {
             if (visualModel == null)
@@ -206,13 +217,13 @@ namespace PocketPlanet
 
         public bool CanInteract(PipCharacterController player)
         {
-            return player != null && Vector3.Distance(player.transform.position, transform.position) <= 4.2f;
+            return player != null && Vector3.Distance(player.transform.position, transform.position) <= 5.6f;
         }
 
         public string GetPromptText(PipCharacterController player)
         {
             if (IsDialogueOpen)
-                return $"Press [E] to Continue Talking to {npcName}";
+                return $"Press [E] to Continue Talking to {npcName} ({GetActiveLineNumber()}/{GetTotalLineCount()})";
             return $"Press [E] to Talk to {npcName} ({npcRole})";
         }
 
@@ -243,6 +254,13 @@ namespace PocketPlanet
                 {
                     _lineIndex = -1;
                 }
+            }
+
+            if (_speechBubbleText != null)
+            {
+                _speechBubbleText.text = IsDialogueOpen
+                    ? WrapBubbleText(npcName, GetActiveLineText())
+                    : $"{npcName}\nPress [E] to Talk";
             }
         }
 

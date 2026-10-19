@@ -584,11 +584,64 @@ namespace PocketPlanet
             carrySocket.rotation = transform.rotation;
         }
 
+        private readonly System.Collections.Generic.List<IPocketInteractable> _cachedInteractables = new System.Collections.Generic.List<IPocketInteractable>();
+        private float _nextInteractableCacheTime;
+
+        private void RefreshInteractableCacheIfNeeded()
+        {
+            if (_cachedInteractables.Count > 0 && Time.time < _nextInteractableCacheTime)
+                return;
+
+            _nextInteractableCacheTime = Time.time + 1.0f;
+            _cachedInteractables.Clear();
+            MonoBehaviour[] allBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < allBehaviours.Length; i++)
+            {
+                if (allBehaviours[i] is IPocketInteractable inter)
+                {
+                    _cachedInteractables.Add(inter);
+                }
+            }
+        }
+
         private void ScanInteractables()
         {
             FocusedInteractable = null;
+
+            // If an NPC dialogue is currently open and Pip is still in range, keep focus on that NPC so [E] advances lines smoothly
+            var gm = PocketPlanetGameManager.Instance;
+            if (gm != null)
+            {
+                if (gm.captainAstra != null && gm.captainAstra.IsDialogueOpen && gm.captainAstra.CanInteract(this))
+                {
+                    FocusedInteractable = gm.captainAstra;
+                    return;
+                }
+                if (gm.wardenNyx != null && gm.wardenNyx.IsDialogueOpen && gm.wardenNyx.CanInteract(this))
+                {
+                    FocusedInteractable = gm.wardenNyx;
+                    return;
+                }
+            }
+
             float bestScore = float.MaxValue;
-            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, 4.5f);
+
+            RefreshInteractableCacheIfNeeded();
+            for (int i = 0; i < _cachedInteractables.Count; i++)
+            {
+                IPocketInteractable inter = _cachedInteractables[i];
+                if (inter is MonoBehaviour mb && mb != null && mb.gameObject.activeInHierarchy && inter.CanInteract(this))
+                {
+                    float dist = Vector3.Distance(transform.position, mb.transform.position);
+                    if (dist < bestScore)
+                    {
+                        bestScore = dist;
+                        FocusedInteractable = inter;
+                    }
+                }
+            }
+
+            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up * 0.5f, 5.5f);
             foreach (Collider col in hits)
             {
                 IPocketInteractable inter = col.GetComponentInParent<IPocketInteractable>();
@@ -608,6 +661,24 @@ namespace PocketPlanet
 
         public void HandleInteractAction()
         {
+            // Priority 0: If an NPC dialogue is currently open and in range, advance/close it
+            var gm = PocketPlanetGameManager.Instance;
+            if (gm != null)
+            {
+                if (gm.captainAstra != null && gm.captainAstra.IsDialogueOpen && gm.captainAstra.CanInteract(this))
+                {
+                    gm.captainAstra.OnInteract(this);
+                    PlayInteractAnimation();
+                    return;
+                }
+                if (gm.wardenNyx != null && gm.wardenNyx.IsDialogueOpen && gm.wardenNyx.CanInteract(this))
+                {
+                    gm.wardenNyx.OnInteract(this);
+                    PlayInteractAnimation();
+                    return;
+                }
+            }
+
             // Priority 1: If carrying fruit and near a HungryBloomPlant that wants fruit, feed it!
             if (CarriedFruit != null && FocusedInteractable is HungryBloomPlant plant && plant.CanInteract(this))
             {
@@ -622,10 +693,14 @@ namespace PocketPlanet
                 return;
             }
 
-            // Priority 3: Interact with focused object (Starberry, Lever, Bloop, Spaceship)
+            // Priority 3: Interact with focused object (NPC, Solaris Core, Saucer, Pylon, Shrine, Starberry, Lever, Bloop, Spaceship)
             if (FocusedInteractable != null && FocusedInteractable.CanInteract(this))
             {
                 FocusedInteractable.OnInteract(this);
+                if (!IsInVehicle && !_celebrating && CarriedFruit == null)
+                {
+                    PlayInteractAnimation();
+                }
             }
         }
 
