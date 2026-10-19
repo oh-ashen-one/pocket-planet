@@ -27,6 +27,8 @@ namespace PocketPlanet
         public SpaceshipFlightController flyingSaucer;
         public NpcCharacterDialogue wardenNyx;
         public ObsidianShrineAltar obsidianShrine;
+        public BouncyMushroom planetTwoBogShroom;
+        public List<ObsidianCrystalPylon> obsidianPylons = new List<ObsidianCrystalPylon>();
 
         private string _mode = "";
         private string _captureDir = "";
@@ -262,7 +264,29 @@ namespace PocketPlanet
             SaveShot("07_obsidian_deadwood_planet2_arrival.png");
 
             // Walk along the glowing violet-rune path through the ObsidianRuins & Deadwood Forest
-            yield return DriveMove(new Vector2(0.12f, 1.0f), true, 1.35f);
+            yield return DriveMove(new Vector2(0.12f, 1.0f), true, 0.85f);
+
+            // Attune the 3 Resonant Obsidian Crystal Pylons (West Ruin, East Bog Overlook via Bouncy Shroom, and North Sanctuary) to dissolve the Shadow Barrier!
+            if (obsidianPylons != null && obsidianPylons.Count > 0)
+            {
+                for (int i = 0; i < obsidianPylons.Count; i++)
+                {
+                    ObsidianCrystalPylon pylon = obsidianPylons[i];
+                    if (pylon == null) continue;
+                    if (i == 1 && planetTwoBogShroom != null)
+                    {
+                        player.TeleportTo(planetTwoBogShroom.transform.position + Vector3.up * 0.6f, Quaternion.Euler(0f, 75f, 0f));
+                        planetTwoBogShroom.TriggerBounce(player);
+                        yield return new WaitForSeconds(0.18f);
+                    }
+                    Vector3 pylonApproach = pylon.transform.position + new Vector3(-1.35f, 0f, -1.25f);
+                    player.TeleportTo(pylonApproach, Quaternion.Euler(0f, 35f, 0f));
+                    SetCameraOrbit(18f, 18f, 4.8f);
+                    yield return new WaitForSeconds(0.20f);
+                    pylon.AttunePylon(player);
+                    yield return new WaitForSeconds(0.25f);
+                }
+            }
 
             // Shot 8: Talk to Warden Nyx at the Northern Obsidian Sanctuary beside the Dying Shrine Lantern
             if (wardenNyx != null)
@@ -452,6 +476,8 @@ namespace PocketPlanet
             bool hasCore = gameManager != null && gameManager.HasSolarisCore;
             bool landedP2 = gameManager != null && gameManager.HasFlownToPlanetTwo;
             bool delivered = gameManager != null && gameManager.ShrineDelivered;
+            int asteroidsShattered = gameManager != null ? gameManager.AsteroidsShatteredCount : 0;
+            int attunedPylons = gameManager != null ? gameManager.AttunedPylonCount : 0;
 
             string json = "{\n" +
                           $"  \"mode\": \"{_mode}\",\n" +
@@ -467,6 +493,8 @@ namespace PocketPlanet
                           $"  \"talkedToAstra\": {(talked ? "true" : "false")},\n" +
                           $"  \"collectedSolarisCore\": {(hasCore ? "true" : "false")},\n" +
                           $"  \"flewToObsidianDeadwood\": {(landedP2 ? "true" : "false")},\n" +
+                          $"  \"asteroidsShattered\": {asteroidsShattered},\n" +
+                          $"  \"attunedPylons\": {attunedPylons},\n" +
                           $"  \"deliveredSolarisCore\": {(delivered ? "true" : "false")}\n" +
                           "}\n";
 

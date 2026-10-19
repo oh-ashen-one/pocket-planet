@@ -499,6 +499,85 @@ def gen_bgm_obsidian_loop():
     return out
 
 
+def gen_saucer_laser():
+    # Crisp retro-cute star-pulse pew
+    dur = 0.24
+    n = int(SR * dur)
+    out = []
+    phase = 0.0
+    for i in range(n):
+        t = i / SR
+        f = 1480.0 * math.exp(-t * 11.5) + 240.0
+        phase += 2 * math.pi * f / SR
+        env = math.exp(-t * 14.0) * min(1.0, t / 0.005)
+        s = 0.7 * math.sin(phase) + 0.3 * math.sin(2.5 * phase)
+        out.append(s * env * 0.72)
+    return out
+
+
+def gen_asteroid_shatter():
+    # Crystalline meteor shatter + crunch + high chime sparkles
+    rng = random.Random(612)
+    dur = 0.68
+    n = int(SR * dur)
+    out = []
+    lp = 0.0
+    chimes = [880.0, 1174.66, 1318.51, 1760.0]
+    for i in range(n):
+        t = i / SR
+        noise = rng.uniform(-1.0, 1.0)
+        lp = 0.85 * lp + 0.15 * noise
+        crunch = lp * math.exp(-t * 9.0) * 0.65
+        sparkle = 0.0
+        for k, cf in enumerate(chimes):
+            st = k * 0.055
+            if t >= st:
+                lt = t - st
+                sparkle += math.sin(2 * math.pi * cf * lt) * math.exp(-lt * 10.0) * 0.22
+        out.append((crunch + sparkle) * 0.85)
+    return out
+
+
+def gen_pylon_attune():
+    # Resonant crystal pylon harmonic chord swell
+    dur = 0.95
+    n = int(SR * dur)
+    out = []
+    notes = [440.0, 554.37, 659.25, 880.0, 1108.73]
+    for i in range(n):
+        t = i / SR
+        s = 0.0
+        for k, nf in enumerate(notes):
+            st = k * 0.07
+            if t >= st:
+                lt = t - st
+                env = math.exp(-lt * 3.2) * min(1.0, lt / 0.015)
+                s += (0.7 * math.sin(2 * math.pi * nf * lt) + 0.3 * math.sin(2 * math.pi * nf * 2.0 * lt)) * env * 0.25
+        out.append(s)
+    return out
+
+
+def gen_barrier_dissolve():
+    # Magical shield barrier shatter + ascending liberación sweep
+    dur = 1.25
+    n = int(SR * dur)
+    out = []
+    chord = [293.66, 440.0, 587.33, 739.99, 880.0, 1174.66]
+    for i in range(n):
+        t = i / SR
+        sweep_f = 220.0 + 760.0 * (t / dur) ** 1.4
+        sweep = math.sin(2 * math.pi * sweep_f * t) * math.sin(math.pi * t / dur) * 0.25
+        s = sweep
+        for k, nf in enumerate(chord):
+            st = k * 0.08
+            if t >= st:
+                lt = t - st
+                env = math.exp(-lt * 2.6) * min(1.0, lt / 0.02)
+                s += (0.65 * math.sin(2 * math.pi * nf * lt) + 0.35 * math.sin(4 * math.pi * nf * lt)) * env * 0.22
+        out.append(s)
+    return out
+
+
 def main():
     clips = {
         "footstep_grass_0": gen_footstep_grass(0),
@@ -527,6 +606,10 @@ def main():
         "saucer_boost": gen_saucer_boost(),
         "shrine_ignite": gen_shrine_ignite(),
         "bgm_obsidian_deadwood": gen_bgm_obsidian_loop(),
+        "saucer_laser": gen_saucer_laser(),
+        "asteroid_shatter": gen_asteroid_shatter(),
+        "pylon_attune": gen_pylon_attune(),
+        "barrier_dissolve": gen_barrier_dissolve(),
     }
     for name, samples in clips.items():
         p = save_wav(name, samples)
@@ -535,3 +618,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

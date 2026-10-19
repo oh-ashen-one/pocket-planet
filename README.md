@@ -6,30 +6,30 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
 
 ### The Interplanetary Delivery Quest (Main Storyline)
 1. **Planet 1 — Verdant Haven (Lush Garden Planet)**:
-   - Explore a sculpted multi-hill garden planet (`180m × 180m` Unity Terrain) featuring a cascading cyan waterfall pond, dense Tripo 3D canopy trees (`TripoLushTree`), glowing spiral palms (`TripoAlienPalmTree`), flower bushes (`TripoFlowerBush`), responsive glowing flora, and hovering sky saucers (`PatrollingSaucerWalker`).
-   - Talk to **Captain Astra** (`TripoNpcAstra`) at the Starport Campfire (`[E]`) to learn that the sister sanctuary on the dark planet **Obsidian Deadwood** has been swallowed by shadow-fog and its ancient Shrine Lantern is dying.
-   - Bounce up **Starlight Ridge** via springy **Jelly-Shrooms** and retrieve the golden **Solaris Astral Core** (`TripoSolarisCore`), which floats warmly above Pip's backpack as a portable lantern.
-2. **Interactive 3D Space Flight Mode**:
+   - Explore a sculpted multi-hill garden planet (`180m × 180m` Unity Terrain) with **3-layer procedural terrain splatmaps** (`VerdantCloverGrass`, `VerdantPathDirt`, `VerdantCliffStone`), **52 swaying 3D grass/clover patches**, a cascading cyan waterfall pond, dense Tripo 3D canopy trees (`TripoLushTree`), glowing spiral palms (`TripoAlienPalmTree`), flower bushes (`TripoFlowerBush`), and hovering sky saucers (`PatrollingSaucerWalker`).
+   - Talk to **Captain Astra** (`TripoNpcAstra`) at the Starport Campfire (`[E]`) — featuring **3D floating world-space speech bubbles** — to learn that the sister sanctuary on the dark planet **Obsidian Deadwood** has been swallowed by shadow-fog and its ancient Shrine Lantern is dying.
+   - Follow the **3D Floating Starlight Waypoint Compass** ([`QuestWaypointCompass.cs`](Assets/PocketPlanet/Scripts/QuestWaypointCompass.cs)), bounce up **Starlight Ridge** via springy **Jelly-Shrooms**, and retrieve the golden **Solaris Astral Core** (`TripoSolarisCore`), which floats warmly above Pip's backpack as a portable lantern.
+2. **Interactive 3D Space Flight & Star-Pulse Asteroid Blaster**:
    - Step onto the stone launchpad and press **`[E]`** to board the **Starhopper Flying Saucer** (`TripoFlyingSaucer` / [`SpaceshipFlightController.cs`](Assets/PocketPlanet/Scripts/SpaceshipFlightController.cs)).
-   - Pilot the 3D Flying Saucer (`WASD` / Left Stick to steer & pitch, `Shift` to Hyper-Boost, `G` for quick-warp) from Verdant Haven's orbit through the **Deep Space Asteroid Belt** (`28` drifting `TripoSpaceAsteroid` crystal meteors, `5` glowing `SpaceWarpBoostRing` gates, and escort saucers) toward the purple-ringed **Obsidian Deadwood** globe and land on its pad.
-3. **Planet 2 — Obsidian Deadwood (Dark & Gloomy Planet) & Shrine Finale**:
-   - Step out onto a starkly contrasting dark and moody world (`180m × 180m` sculpted dark basalt terrain, thick purple shadow-fog, dim violet moonlight, and eerie crystal-wind ambient music) illuminated by Pip's carried Solaris Core lantern.
-   - Journey past a half-buried `TripoCrashedSaucer`, gnarled `TripoDeadwoodTree`s, glowing `TripoObsidianCrystal` clusters, `TripoSpookyMushroom` bogs, and `TripoObsidianRuin` stone archways to reach **Warden Nyx** (`TripoNpcNyx`) at the Northern Sanctuary.
-   - Deliver the Solaris Core (`[E]`) to the **Dying Obsidian Shrine Lantern** (`TripoShrineLantern` / [`ObsidianShrineAltar.cs`](Assets/PocketPlanet/Scripts/ObsidianShrineAltar.cs)) to ignite a towering starlight beam and 6 sanctuary torches, push back the shadow-fog, and celebrate!
+   - Pilot the 3D Flying Saucer (`WASD` / Left Stick to steer & pitch, `Shift` to Hyper-Boost, `Space` / `F` / `Left Click` to fire **twin Star-Pulse Blaster bolts**, `G` for quick-warp) from Verdant Haven's orbit through the **Deep Space Asteroid Belt** (`28` destructible `TripoSpaceAsteroid` crystal meteors that shatter into spinning shards, `5` glowing `SpaceWarpBoostRing` gates, and recharging **Hull Shield %**) toward the purple-ringed **Obsidian Deadwood** globe and land on its pad.
+3. **Planet 2 — Obsidian Deadwood (Dark & Gloomy Planet), Crystal Pylon Gauntlet & Shrine Finale**:
+   - Step out onto a starkly contrasting dark and moody world (`180m × 180m` sculpted dark basalt terrain with glowing violet-magma cracks `ObsidianCrackedBasalt`, `ObsidianRunePath`, `ObsidianRidgeAsh`, **36 glowing crystal-grass tufts**, thick purple shadow-fog, and eerie crystal-wind ambient music) illuminated by Pip's carried Solaris Core lantern.
+   - Cross the glowing **Shadow-Bog Chasm** ([`ObsidianBogHazardZone.cs`](Assets/PocketPlanet/Scripts/ObsidianBogHazardZone.cs)) via bouncy mushrooms and attune all **3 Resonant Obsidian Crystal Pylons** ([`ObsidianCrystalPylon.cs`](Assets/PocketPlanet/Scripts/ObsidianCrystalPylon.cs)) with your Solaris Core (`[E]`) to dissolve the **Obsidian Shadow-Shield Barrier** ([`ObsidianShadowBarrier.cs`](Assets/PocketPlanet/Scripts/ObsidianShadowBarrier.cs)) guarding the Northern Sanctuary.
+   - Talk to **Warden Nyx** (`TripoNpcNyx`) and deliver the Solaris Core (`[E]`) to the **Dying Obsidian Shrine Lantern** (`TripoShrineLantern` / [`ObsidianShrineAltar.cs`](Assets/PocketPlanet/Scripts/ObsidianShrineAltar.cs)) to ignite a towering starlight beam and 6 sanctuary torches, push back the shadow-fog, and celebrate!
    - At any time afterward, board the Flying Saucer to fly back and forth between **Verdant Haven** and **Obsidian Deadwood**, or complete the bonus **3 Star Seeds** playground interactions on Verdant Haven!
 
 ---
 
 ## Gameplay Screenshots (Captured Live from Running Unity 6 Standalone Build)
 
-| 1. Verdant Haven Overhaul (Sculpted Hills, Trees, Waterfall & Saucer) | 2. Talking to Captain Astra (Interplanetary Quest Briefing) |
+| 1. Verdant Haven Overhaul (Clover Terrain, 3D Grass, Trees & Saucer) | 2. Talking to Captain Astra (3D World Speech Bubble & Quest Briefing) |
 | :---: | :---: |
 | ![Verdant Haven Overhaul](docs/screenshots/gameplay/01_verdant_haven_overhaul_overview.png) | ![Captain Astra Quest](docs/screenshots/gameplay/02_talk_to_captain_astra_quest.png) |
 | **3. Bouncing Toward Starlight Ridge** | **4. Retrieving the Golden Solaris Astral Core** |
 | ![Bouncy Shroom to Ridge](docs/screenshots/gameplay/03_bouncy_shroom_to_starlight_ridge.png) | ![Solaris Astral Core](docs/screenshots/gameplay/04_starlight_ridge_solaris_core.png) |
-| **5. Boarding the Starhopper Flying Saucer on the Launchpad** | **6. Interactive 3D Space Flight Through the Asteroid Belt** |
+| **5. Boarding the Starhopper Flying Saucer on the Launchpad** | **6. 3D Space Flight & Star-Pulse Blaster Shattering Asteroids** |
 | ![Boarding Flying Saucer](docs/screenshots/gameplay/05_boarding_flying_saucer_launchpad.png) | ![3D Space Flight Corridor](docs/screenshots/gameplay/06_deep_space_3d_flight_corridor.png) |
-| **7. Arrival on Planet 2: Obsidian Deadwood (Dark Basalt & Ruins)** | **8. Warden Nyx & The Dying Obsidian Shrine Lantern** |
+| **7. Arrival on Planet 2: Obsidian Deadwood (Magma-Cracked Basalt & Ruins)** | **8. Warden Nyx (3D Speech Bubble) & The Obsidian Shrine** |
 | ![Obsidian Deadwood Arrival](docs/screenshots/gameplay/07_obsidian_deadwood_planet2_arrival.png) | ![Warden Nyx & Dying Shrine](docs/screenshots/gameplay/08_warden_nyx_and_dying_shrine.png) |
 
 ### 9. Delivering the Solaris Core — Ignited Obsidian Shrine & Celebration Finale
@@ -54,19 +54,19 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
 
 ## Core Adventure & Interactive Systems
 
-1. **Two Contrasting Sculpted Planets & Dynamic Atmosphere** ([`PlanetaryAtmosphereController.cs`](Assets/PocketPlanet/Scripts/PlanetaryAtmosphereController.cs))
-   - Smoothly transitions directional sunlight, ambient tri-light colors, exponential fog density, skybox tint, and background music between **Verdant Haven** (bright turquoise-emerald garden), **Deep Space Orbit** (starry indigo cosmos), and **Obsidian Deadwood** (brooding dark violet basalt world with thick purple mist).
-2. **NPC Quest Givers & Multi-Page Dialogue** ([`NpcCharacterDialogue.cs`](Assets/PocketPlanet/Scripts/NpcCharacterDialogue.cs))
-   - **Captain Astra** (`TripoNpcAstra`) on Verdant Haven and **Warden Nyx** (`TripoNpcNyx`) on Obsidian Deadwood turn to face Pip, bounce expressively with synthesized voice chirps (`npc_chirp.wav`), and guide the player through the interplanetary delivery quest.
+1. **Two Contrasting Sculpted Planets, 3-Layer Splatmaps, 3D Swaying Grass & Dynamic Atmosphere** ([`PlanetaryAtmosphereController.cs`](Assets/PocketPlanet/Scripts/PlanetaryAtmosphereController.cs))
+   - Smoothly transitions directional sunlight, ambient tri-light colors, exponential fog density, skybox tint, and background music between **Verdant Haven** (bright turquoise-emerald clover meadow with 52 swaying 3D grass patches), **Deep Space Orbit** (starry indigo cosmos), and **Obsidian Deadwood** (brooding dark basalt world with purple magma cracks, 36 glowing crystal-grass tufts, and thick violet mist).
+2. **NPC Quest Givers, 3D World-Space Speech Bubbles & Starlight Waypoint Compass** ([`NpcCharacterDialogue.cs`](Assets/PocketPlanet/Scripts/NpcCharacterDialogue.cs), [`QuestWaypointCompass.cs`](Assets/PocketPlanet/Scripts/QuestWaypointCompass.cs))
+   - **Captain Astra** (`TripoNpcAstra`) on Verdant Haven and **Warden Nyx** (`TripoNpcNyx`) on Obsidian Deadwood turn to face Pip, display crisp **3D billboarded speech bubbles** above their heads, and bounce expressively with synthesized voice chirps (`npc_chirp.wav`), while a **3D Starlight Chevron Arrow** and **Objective Beacon Ring** guide Pip to the active quest target.
 3. **Solaris Astral Core & Portable Lantern Aura** ([`SolarisCoreRelic.cs`](Assets/PocketPlanet/Scripts/SolarisCoreRelic.cs))
    - Retrieving the golden `TripoSolarisCore` on Starlight Ridge attaches a warm golden floating orb (`CarriedSolarisCoreAura`) above Pip's backpack that dynamically illuminates the dark ruins and deadwood forest on Planet 2.
-4. **Interactive 3D Flying Saucer Space Flight** ([`SpaceshipFlightController.cs`](Assets/PocketPlanet/Scripts/SpaceshipFlightController.cs), [`SpaceWarpBoostRing.cs`](Assets/PocketPlanet/Scripts/SpaceWarpBoostRing.cs))
-   - Board the parked `TripoFlyingSaucer` on either planet's launchpad (`[E]`) to lift off into 3D space. Steer across the cosmic corridor with banking/pitch physics, fly through 5 cyan-and-magenta **Warp Boost Rings** for speed bursts, dodge 28 rotating `TripoSpaceAsteroid`s, and land smoothly on the destination planet.
-5. **Obsidian Shrine Lantern Delivery & Sanctuary Ignition** ([`ObsidianShrineAltar.cs`](Assets/PocketPlanet/Scripts/ObsidianShrineAltar.cs))
-   - Delivering the Solaris Core (`[E]`) to the dying `TripoShrineLantern` ignites a towering golden starlight beam and 6 surrounding sanctuary torch pillars, thins the dark fog on Obsidian Deadwood, and triggers Pip's celebration dance.
+4. **Interactive 3D Flying Saucer Space Flight & Star-Pulse Asteroid Blaster** ([`SpaceshipFlightController.cs`](Assets/PocketPlanet/Scripts/SpaceshipFlightController.cs), [`DestructibleSpaceAsteroid.cs`](Assets/PocketPlanet/Scripts/DestructibleSpaceAsteroid.cs), [`SaucerLaserBolt.cs`](Assets/PocketPlanet/Scripts/SaucerLaserBolt.cs), [`SpaceWarpBoostRing.cs`](Assets/PocketPlanet/Scripts/SpaceWarpBoostRing.cs))
+   - Board the parked `TripoFlyingSaucer` on either planet's launchpad (`[E]`) to lift off into 3D space. Steer across the cosmic corridor with banking/pitch physics, fire twin **Star-Pulse Blaster** bolts (`saucer_laser.wav`) to shatter `28` `DestructibleSpaceAsteroid` crystal meteors into spinning shards (`asteroid_shatter.wav`), fly through 5 cyan-and-magenta **Warp Boost Rings** for speed bursts and hull shield recharge, and land smoothly on the destination planet.
+5. **Planet 2 Resonant Crystal Pylons, Shadow-Bog Chasm & Obsidian Shrine Ignition** ([`ObsidianCrystalPylon.cs`](Assets/PocketPlanet/Scripts/ObsidianCrystalPylon.cs), [`ObsidianShadowBarrier.cs`](Assets/PocketPlanet/Scripts/ObsidianShadowBarrier.cs), [`ObsidianBogHazardZone.cs`](Assets/PocketPlanet/Scripts/ObsidianBogHazardZone.cs), [`ObsidianShrineAltar.cs`](Assets/PocketPlanet/Scripts/ObsidianShrineAltar.cs))
+   - Bounce across the glowing **Shadow-Bog Chasm** and channel your Solaris Core into **3 Resonant Obsidian Crystal Pylons** (`pylon_attune.wav`) to sever their tether beams and dissolve the **Obsidian Shadow-Shield Barrier** (`barrier_dissolve.wav`). Then deliver the Solaris Core (`[E]`) to the dying `TripoShrineLantern` to ignite a towering golden starlight beam and 6 sanctuary torch pillars!
 6. **Bonus Toybox Playground Interactions on Verdant Haven**:
    - **Oversized Starberry Pickup, Weighted Carry, Drop & Throw** ([`StarberryItem.cs`](Assets/PocketPlanet/Scripts/StarberryItem.cs)) → Feed **Hungry Bloom-Plant** ([`HungryBloomPlant.cs`](Assets/PocketPlanet/Scripts/HungryBloomPlant.cs)) to bloom a flower platform (**Star Seed #1**).
-   - **Springy Bouncy Jelly-Shrooms** ([`BouncyMushroom.cs`](Assets/PocketPlanet/Scripts/BouncyMushroom.cs)) → Squash-and-recoil launch pads up to Starlight Ridge and the East Boulder Slope.
+   - **Springy Bouncy Jelly-Shrooms** ([`BouncyMushroom.cs`](Assets/PocketPlanet/Scripts/BouncyMushroom.cs)) → Squash-and-recoil launch pads up to Starlight Ridge, the East Boulder Slope, and the Planet 2 Shadow-Bog Overlook.
    - **Pushable Boulder & Domino Block Route** ([`PushableBoulder.cs`](Assets/PocketPlanet/Scripts/PushableBoulder.cs), [`DominoBlock.cs`](Assets/PocketPlanet/Scripts/DominoBlock.cs)) → Topple the domino blocks (**Star Seed #2**).
    - **Crystal Lever & Unfolding Petal Bridge** ([`CrystalLeverBridge.cs`](Assets/PocketPlanet/Scripts/CrystalLeverBridge.cs)) → Unfold the 5-segment bridge to the North Alien Pod Village.
    - **Friendly Alien Creature ("Bloop") Petting & Following** ([`FriendlyAlienBloop.cs`](Assets/PocketPlanet/Scripts/FriendlyAlienBloop.cs)) → Pet Bloop (**Star Seed #3**) and have it hop along behind you.
@@ -82,7 +82,7 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
 | **Move** | `W`, `A`, `S`, `D` or `Arrow Keys` | `Left Stick` |
 | **Run / Sprint** | Hold `Left Shift` / `Right Shift` | Hold `L1 / LB` or `R2 / RT` |
 | **Jump** (Coyote Time + Jump Buffer) | `Space` | `South Button` (`Cross` / `A`) |
-| **Interact / Talk / Pick Up Core or Fruit / Board Saucer / Ignite Shrine** | `E` or `F` | `West Button` (`Square` / `X`) |
+| **Interact / Talk / Pick Up Core / Attune Pylon / Board Saucer / Ignite Shrine** | `E` or `F` | `West Button` (`Square` / `X`) |
 | **Throw / Drop Carried Starberry** | `Q`, `R`, or `Left Mouse Click` | `East Button` (`Circle` / `B`) |
 | **Orbit Camera** | Hold `Right Mouse Button` + Move Mouse, or `Q` / `E` | `Right Stick` |
 | **Zoom Camera** | `Mouse Scroll Wheel` | — |
@@ -92,7 +92,8 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
 | Action | Keyboard / Mouse | Gamepad (DualSense / Xbox) |
 | :--- | :--- | :--- |
 | **Steer Left / Right & Pitch Up / Down** | `W`, `A`, `S`, `D` or `Arrow Keys` | `Left Stick` |
-| **Hyper-Boost Thrusters** | Hold `Left Shift` or `Space` | Hold `South Button` (`A` / `Cross`) or `R2 / RT` |
+| **Fire Star-Pulse Blaster (Shatter Crystal Meteors)** | `Space`, `F`, `E`, or `Left Mouse Click` | `West Button` (`Square` / `X`) or `R1 / RB` |
+| **Hyper-Boost Thrusters** | Hold `Left Shift` | Hold `South Button` (`A` / `Cross`) or `R2 / RT` |
 | **Quick-Warp to Destination Planet Landing Pad** | Press `G` | — |
 | **Keep Exploring (Post-Victory)** | `C` or On-Screen Button | On-Screen Button |
 | **Restart Adventure** | `Backspace` or On-Screen Button | On-Screen Button |

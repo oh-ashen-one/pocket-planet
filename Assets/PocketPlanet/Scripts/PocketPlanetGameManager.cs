@@ -17,6 +17,8 @@ namespace PocketPlanet
         public NpcCharacterDialogue wardenNyx;
         public SolarisCoreRelic solarisCore;
         public ObsidianShrineAltar obsidianShrine;
+        public ObsidianShadowBarrier obsidianShadowBarrier;
+        public List<ObsidianCrystalPylon> obsidianPylons = new List<ObsidianCrystalPylon>();
         public List<StarSeedCollectible> allSeeds = new List<StarSeedCollectible>();
 
         // Main Delivery Quest State
@@ -25,6 +27,9 @@ namespace PocketPlanet
         public bool HasFlownToPlanetTwo { get; private set; }
         public bool TalkedToNyx { get; private set; }
         public bool ShrineDelivered { get; private set; }
+        public int AttunedPylonCount { get; private set; }
+        public int AsteroidsShatteredCount { get; private set; }
+        public bool IsFlyingSaucerActive => saucerFlight != null && saucerFlight.IsInFlight;
 
         public int CollectedSeeds { get; private set; }
         public bool ShipRepaired { get; private set; }
@@ -52,6 +57,14 @@ namespace PocketPlanet
             ForceWindowedModeOnStartup();
         }
 
+        private void Start()
+        {
+            if (GetComponent<QuestWaypointCompass>() == null)
+            {
+                gameObject.AddComponent<QuestWaypointCompass>();
+            }
+        }
+
         private void Update()
         {
             if (_bannerTimer > 0f)
@@ -69,6 +82,59 @@ namespace PocketPlanet
                 KeepExploring();
             if ((ShipRepaired || ShrineDelivered) && restartKey)
                 RestartAdventure();
+        }
+
+        public Transform GetActiveQuestTargetTransform(out string label)
+        {
+            label = "";
+            if (ShrineDelivered || ShipRepaired)
+                return null;
+
+            if (!TalkedToAstra && captainAstra != null)
+            {
+                label = "Captain Astra";
+                return captainAstra.transform;
+            }
+            if (!HasSolarisCore && solarisCore != null)
+            {
+                label = "Solaris Astral Core";
+                return solarisCore.transform;
+            }
+            if (!HasFlownToPlanetTwo && saucerFlight != null)
+            {
+                label = "Starhopper Flying Saucer";
+                return saucerFlight.transform;
+            }
+            if (obsidianPylons != null && obsidianPylons.Count > 0 && AttunedPylonCount < obsidianPylons.Count)
+            {
+                ObsidianCrystalPylon nearest = null;
+                float bestDist = float.MaxValue;
+                Vector3 pPos = player != null ? player.transform.position : Vector3.zero;
+                for (int i = 0; i < obsidianPylons.Count; i++)
+                {
+                    var p = obsidianPylons[i];
+                    if (p != null && !p.IsAttuned)
+                    {
+                        float d = Vector3.Distance(pPos, p.transform.position);
+                        if (d < bestDist)
+                        {
+                            bestDist = d;
+                            nearest = p;
+                        }
+                    }
+                }
+                if (nearest != null)
+                {
+                    label = $"{nearest.pylonTitle} ({AttunedPylonCount}/{obsidianPylons.Count})";
+                    return nearest.transform;
+                }
+            }
+            if (obsidianShrine != null)
+            {
+                label = "Obsidian Shrine Lantern";
+                return obsidianShrine.transform;
+            }
+            return null;
         }
 
         public void RecordInteraction(string label)
@@ -103,9 +169,15 @@ namespace PocketPlanet
         {
             RecordInteraction("Launched Flying Saucer into Deep Space");
             if (towardPlanetTwo)
-                ShowBanner("🛸 SPACE FLIGHT: Pilot through the Crystal Asteroid Belt toward Obsidian Deadwood! ([Shift] Boost)");
+                ShowBanner("🛸 SPACE FLIGHT: Shoot Crystal Asteroids ([F]/[Space]/Click) & Boost ([Shift]) to Obsidian Deadwood!");
             else
                 ShowBanner("🛸 SPACE FLIGHT: Returning through the Asteroid Belt toward Verdant Haven!");
+        }
+
+        public void OnSpaceAsteroidShattered()
+        {
+            AsteroidsShatteredCount++;
+            RecordInteraction("Shattered Crystal Space Asteroid");
         }
 
         public void OnLandedOnPlanet(bool onPlanetTwo)
@@ -115,11 +187,40 @@ namespace PocketPlanet
                 HasFlownToPlanetTwo = true;
                 CollectedSeeds = Mathf.Max(CollectedSeeds, 3);
                 RecordInteraction("Landed on Obsidian Deadwood Planet");
-                ShowBanner("🌑 Touchdown on OBSIDIAN DEADWOOD! Follow the glowing violet crystals to Warden Nyx & the Dying Shrine!");
+                ShowBanner("🌑 Touchdown on OBSIDIAN DEADWOOD! Attune the 3 Resonant Crystal Pylons to unshield the Shrine!");
             }
             else
             {
                 ShowBanner("🌿 Touchdown on VERDANT HAVEN!");
+            }
+        }
+
+        public void OnAttunedObsidianPylon(int index, ObsidianCrystalPylon pylon)
+        {
+            int count = 0;
+            if (obsidianPylons != null && obsidianPylons.Count > 0)
+            {
+                for (int i = 0; i < obsidianPylons.Count; i++)
+                {
+                    if (obsidianPylons[i] != null && obsidianPylons[i].IsAttuned)
+                        count++;
+                }
+            }
+            else
+            {
+                count = AttunedPylonCount + 1;
+            }
+            AttunedPylonCount = count;
+            RecordInteraction($"Attuned Obsidian Crystal Pylon #{index + 1}");
+
+            int total = (obsidianPylons != null && obsidianPylons.Count > 0) ? obsidianPylons.Count : 3;
+            if (AttunedPylonCount < total)
+            {
+                ShowBanner($"🔮 Resonant Pylon Attuned ({AttunedPylonCount}/{total})! Follow the Starlight Compass to the next Pylon!");
+            }
+            else
+            {
+                ShowBanner("⚡ ALL 3 CRYSTAL PYLONS ATTUNED — Shadow Barrier Dissolved! Ignite the Obsidian Shrine!");
             }
         }
 
@@ -219,19 +320,21 @@ namespace PocketPlanet
 
             // Top-Left: Sector & Quest Objective Card
             GUI.color = new Color(0.08f, 0.11f, 0.22f, 0.88f);
-            GUI.Box(new Rect(18, 18, 430, 96), GUIContent.none);
+            GUI.Box(new Rect(18, 18, 445, 98), GUIContent.none);
             GUI.color = Color.white;
 
             int step = GetQuestStepIndex();
-            GUI.Label(new Rect(30, 24, 405, 28), $"{zoneTitle}   |   QUEST: {step}/4", pillStyle);
+            GUI.Label(new Rect(30, 24, 420, 28), $"{zoneTitle}   |   QUEST: {step}/4", pillStyle);
 
             string objText;
             if (ShrineDelivered || ShipRepaired)
                 objText = "★ QUEST COMPLETE: The Solaris Astral Core illuminates Obsidian Deadwood!";
             else if (saucerFlight != null && saucerFlight.IsInFlight)
-                objText = "▸ Pilot the Starhopper Flying Saucer through the Asteroid Belt to the Obsidian Planet Beacon!";
+                objText = $"▸ Pilot Saucer to Obsidian Deadwood! Fire Star-Pulse Blaster [F]/[Click] ({AsteroidsShatteredCount} shattered)";
+            else if (HasFlownToPlanetTwo && obsidianPylons != null && obsidianPylons.Count > 0 && AttunedPylonCount < obsidianPylons.Count)
+                objText = $"▸ Cross the Spooky Bog Chasm & Attune 3 Resonant Crystal Pylons ({AttunedPylonCount}/{obsidianPylons.Count}) to unshield the Shrine!";
             else if (HasFlownToPlanetTwo)
-                objText = "▸ Follow the dark deadwood trail to Warden Nyx & press [E] at the Dying Obsidian Shrine!";
+                objText = "▸ Shadow Barrier Dissolved! Speak to Warden Nyx & press [E] at the Obsidian Shrine!";
             else if (HasSolarisCore)
                 objText = "▸ Return to the stone launchpad and press [E] to board the Starhopper Flying Saucer!";
             else if (TalkedToAstra)
@@ -239,33 +342,33 @@ namespace PocketPlanet
             else
                 objText = "▸ Talk to Captain Astra by the Starport Campfire (press [E]) for your mission briefing!";
 
-            GUI.Label(new Rect(32, 56, 402, 50), objText, subStyle);
+            GUI.Label(new Rect(32, 56, 418, 52), objText, subStyle);
 
             // Top-Right: Controls Card ([H] to toggle)
             if (ShowControlsHelp)
             {
                 GUI.color = new Color(0.08f, 0.11f, 0.22f, 0.84f);
-                GUI.Box(new Rect(Screen.width - 322, 18, 304, 128), GUIContent.none);
+                GUI.Box(new Rect(Screen.width - 332, 18, 314, 134), GUIContent.none);
                 GUI.color = Color.white;
                 string controlsText = (saucerFlight != null && saucerFlight.IsInFlight)
                     ? "SPACE FLIGHT CONTROLS ([H] Toggle)\n" +
-                      "• Steer Left/Right: A / D or Left Stick\n" +
-                      "• Pitch Climb/Dive: W / S or Up / Down\n" +
+                      "• Steer & Pitch: WASD / Left Stick\n" +
+                      "• Star-Pulse Blaster: Space / F / Click\n" +
                       "• Hyper-Thruster Boost: Shift / RT\n" +
                       "• Quick Warp to Landing Pad: G"
                     : "CONTROLS ([H] Toggle)\n" +
                       "• Move & Run: WASD + Shift / Left Stick\n" +
                       "• Jump: Space / South Button (A/Cross)\n" +
-                      "• Talk / Board Ship / Interact: E / West\n" +
+                      "• Talk / Board / Attune / Ignite: E / West\n" +
                       "• Camera Orbit: Mouse / Right Stick";
-                GUI.Label(new Rect(Screen.width - 308, 24, 282, 114), controlsText, subStyle);
+                GUI.Label(new Rect(Screen.width - 318, 24, 292, 120), controlsText, subStyle);
             }
 
             // Space Flight Telemetry HUD when flying the Saucer
             if (saucerFlight != null && saucerFlight.IsInFlight)
             {
-                GUI.color = new Color(0.06f, 0.14f, 0.26f, 0.90f);
-                Rect fRect = new Rect(Screen.width * 0.5f - 270f, Screen.height - 118f, 540f, 64f);
+                GUI.color = new Color(0.06f, 0.14f, 0.26f, 0.92f);
+                Rect fRect = new Rect(Screen.width * 0.5f - 310f, Screen.height - 122f, 620f, 68f);
                 GUI.Box(fRect, GUIContent.none);
                 GUI.color = Color.white;
 
@@ -273,13 +376,13 @@ namespace PocketPlanet
                 string destName = saucerFlight.FlyingTowardPlanetTwo ? "OBSIDIAN DEADWOOD" : "VERDANT HAVEN";
                 GUIStyle flightStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 15,
+                    fontSize = 14,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter
                 };
                 flightStyle.normal.textColor = new Color(0.55f, 0.98f, 1.0f);
                 GUI.Label(new Rect(fRect.x, fRect.y + 8f, fRect.width, 24f),
-                    $"🛸 PILOTING STARHOPPER SAUCER  →  {destName} ({pct}%)   |   SPEED: {saucerFlight.CurrentSpeed:F0} m/s",
+                    $"🛸 SAUCER → {destName} ({pct}%)  |  SHIELD: {saucerFlight.HullShieldPercent:F0}%  |  METEORS SHATTERED: {saucerFlight.AsteroidsShatteredCount}",
                     flightStyle);
 
                 // Progress bar track

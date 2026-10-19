@@ -35,6 +35,9 @@ namespace PocketPlanet
         private Quaternion _baseRot;
         private int _lineIndex = -1;
         private float _talkBounceTimer;
+        private Transform _speechBubbleRoot;
+        private TextMesh _speechBubbleText;
+        private float _bubbleScaleLerp;
 
         public bool IsDialogueOpen => _lineIndex >= 0;
 
@@ -44,6 +47,86 @@ namespace PocketPlanet
                 visualModel = transform;
             _baseModelLocalPos = visualModel.localPosition;
             _baseRot = transform.rotation;
+            BuildWorldSpeechBubble();
+        }
+
+        private void BuildWorldSpeechBubble()
+        {
+            _speechBubbleRoot = new GameObject("WorldSpeechBubble").transform;
+            _speechBubbleRoot.SetParent(transform, false);
+            _speechBubbleRoot.localPosition = new Vector3(0f, 2.35f, 0f);
+            _speechBubbleRoot.localScale = Vector3.zero;
+
+            Shader sh = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+
+            Material borderMat = new Material(sh);
+            Color borderCol = isPlanetOneQuestGiver
+                ? new Color(1.0f, 0.84f, 0.28f)
+                : new Color(0.68f, 0.42f, 1.0f);
+            if (borderMat.HasProperty("_BaseColor")) borderMat.SetColor("_BaseColor", borderCol);
+            if (borderMat.HasProperty("_Color")) borderMat.SetColor("_Color", borderCol);
+            if (borderMat.HasProperty("_EmissionColor"))
+            {
+                borderMat.EnableKeyword("_EMISSION");
+                borderMat.SetColor("_EmissionColor", borderCol * 0.85f);
+            }
+
+            Material cardMat = new Material(sh);
+            Color cardCol = new Color(0.08f, 0.11f, 0.22f);
+            if (cardMat.HasProperty("_BaseColor")) cardMat.SetColor("_BaseColor", cardCol);
+            if (cardMat.HasProperty("_Color")) cardMat.SetColor("_Color", cardCol);
+
+            GameObject borderPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            borderPlate.name = "BubbleBorder";
+            borderPlate.transform.SetParent(_speechBubbleRoot, false);
+            borderPlate.transform.localPosition = new Vector3(0f, 0f, 0.02f);
+            borderPlate.transform.localScale = new Vector3(2.45f, 0.72f, 0.05f);
+            Destroy(borderPlate.GetComponent<Collider>());
+            borderPlate.GetComponent<MeshRenderer>().sharedMaterial = borderMat;
+
+            GameObject innerPlate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            innerPlate.name = "BubbleCard";
+            innerPlate.transform.SetParent(_speechBubbleRoot, false);
+            innerPlate.transform.localPosition = Vector3.zero;
+            innerPlate.transform.localScale = new Vector3(2.33f, 0.60f, 0.06f);
+            Destroy(innerPlate.GetComponent<Collider>());
+            innerPlate.GetComponent<MeshRenderer>().sharedMaterial = cardMat;
+
+            GameObject tail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tail.name = "BubbleTail";
+            tail.transform.SetParent(_speechBubbleRoot, false);
+            tail.transform.localPosition = new Vector3(0f, -0.38f, 0.01f);
+            tail.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            tail.transform.localScale = new Vector3(0.18f, 0.18f, 0.05f);
+            Destroy(tail.GetComponent<Collider>());
+            tail.GetComponent<MeshRenderer>().sharedMaterial = borderMat;
+
+            GameObject textGo = new GameObject("BubbleText");
+            textGo.transform.SetParent(_speechBubbleRoot, false);
+            textGo.transform.localPosition = new Vector3(0f, 0.02f, -0.045f);
+            textGo.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            textGo.transform.localScale = Vector3.one * 0.046f;
+            _speechBubbleText = textGo.AddComponent<TextMesh>();
+            _speechBubbleText.anchor = TextAnchor.MiddleCenter;
+            _speechBubbleText.alignment = TextAlignment.Center;
+            _speechBubbleText.fontStyle = FontStyle.Bold;
+            _speechBubbleText.fontSize = 34;
+            _speechBubbleText.color = new Color(0.10f, 0.06f, 0.24f, 1f);
+            _speechBubbleText.text = $"{npcName}\n[E] Talk";
+        }
+
+        private static string WrapBubbleText(string title, string rawLine)
+        {
+            if (string.IsNullOrEmpty(rawLine))
+                return $"{title}\n[E] Talk";
+            string trimmed = rawLine.Length > 64 ? rawLine.Substring(0, 61) + "..." : rawLine;
+            if (trimmed.Length > 34)
+            {
+                int split = trimmed.LastIndexOf(' ', 34);
+                if (split > 10)
+                    trimmed = trimmed.Substring(0, split) + "\n" + trimmed.Substring(split + 1);
+            }
+            return $"{title}:\n{trimmed}";
         }
 
         private void Update()
@@ -63,13 +146,16 @@ namespace PocketPlanet
             {
                 questMarkerRoot.localPosition = new Vector3(0f, 1.85f + Mathf.Sin(t * 3.8f) * 0.12f, 0f);
                 questMarkerRoot.Rotate(0f, 95f * Time.deltaTime, 0f, Space.Self);
+                questMarkerRoot.gameObject.SetActive(!IsDialogueOpen);
             }
 
             var gm = PocketPlanetGameManager.Instance;
+            bool playerNear = false;
             if (gm != null && gm.player != null)
             {
                 Vector3 toPlayer = gm.player.transform.position - transform.position;
                 toPlayer.y = 0f;
+                playerNear = toPlayer.sqrMagnitude < 28f;
                 if (toPlayer.sqrMagnitude < 36f && toPlayer.sqrMagnitude > 0.05f)
                 {
                     // Tripo FBX character models have their front face along local -Z
@@ -84,6 +170,31 @@ namespace PocketPlanet
                 if (IsDialogueOpen && toPlayer.sqrMagnitude > 42f)
                 {
                     _lineIndex = -1;
+                }
+            }
+
+            if (_speechBubbleRoot != null)
+            {
+                bool shrineFinaleActive = gm != null && gm.ShrineDelivered && !IsDialogueOpen;
+                bool showBubble = IsDialogueOpen || (playerNear && !shrineFinaleActive);
+                float targetScale = IsDialogueOpen ? 1.0f : (showBubble ? 0.68f : 0.0f);
+                _bubbleScaleLerp = Mathf.Lerp(_bubbleScaleLerp, targetScale, Time.deltaTime * 11f);
+                _speechBubbleRoot.gameObject.SetActive(_bubbleScaleLerp > 0.03f);
+                if (showBubble && _speechBubbleText != null)
+                {
+                    _speechBubbleText.text = IsDialogueOpen
+                        ? WrapBubbleText(npcName, GetActiveLineText())
+                        : $"{npcName}\nPress [E] to Talk";
+                }
+                _speechBubbleRoot.localPosition = new Vector3(0f, 2.38f + Mathf.Sin(t * 3.2f) * 0.06f, 0f);
+                _speechBubbleRoot.localScale = Vector3.one * _bubbleScaleLerp;
+                Camera cam = Camera.main;
+                if (cam != null)
+                {
+                    Vector3 toCam = cam.transform.position - _speechBubbleRoot.position;
+                    toCam.y = 0f;
+                    if (toCam.sqrMagnitude > 0.01f)
+                        _speechBubbleRoot.rotation = Quaternion.LookRotation(toCam.normalized, Vector3.up);
                 }
             }
         }

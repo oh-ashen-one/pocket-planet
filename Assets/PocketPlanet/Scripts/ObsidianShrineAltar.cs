@@ -8,6 +8,7 @@ namespace PocketPlanet
         public Light shrineLight;
         public GameObject ignitedBeamColumn;
         public GameObject[] sanctuaryTorches;
+        public ObsidianShadowBarrier shadowBarrier;
         public bool IsIgnited { get; private set; }
 
         private Transform _placedCoreVisual;
@@ -55,7 +56,7 @@ namespace PocketPlanet
         public bool CanInteract(PipCharacterController player)
         {
             if (IsIgnited || player == null) return false;
-            return Vector3.Distance(player.transform.position, transform.position) <= 4.8f;
+            return Vector3.Distance(player.transform.position, transform.position) <= 5.4f;
         }
 
         public string GetPromptText(PipCharacterController player)
@@ -63,6 +64,11 @@ namespace PocketPlanet
             var gm = PocketPlanetGameManager.Instance;
             if (gm != null && !gm.HasSolarisCore)
                 return "Dying Obsidian Shrine — Requires the Solaris Astral Core from Verdant Haven";
+            if (shadowBarrier != null && !shadowBarrier.IsDissolved)
+            {
+                int count = gm != null ? gm.AttunedPylonCount : shadowBarrier.AttunedCount;
+                return $"Shrine Shielded by Shadow Barrier — Attune 3 Crystal Pylons ({count}/3)";
+            }
             return "Press [E] to Deliver Solaris Astral Core & Ignite the Obsidian Shrine!";
         }
 
@@ -78,6 +84,15 @@ namespace PocketPlanet
                 return;
             }
 
+            if (shadowBarrier != null && !shadowBarrier.IsDissolved)
+            {
+                int count = gm != null ? gm.AttunedPylonCount : shadowBarrier.AttunedCount;
+                PocketPlanetAudio.PlaySfx("lever_pull", 0.75f, 0.9f);
+                if (gm != null)
+                    gm.ShowBanner($"Shadow Barrier active! Channel your Solaris Core into all 3 Resonant Crystal Pylons ({count}/3) first!");
+                return;
+            }
+
             IgniteShrine(player);
         }
 
@@ -85,6 +100,9 @@ namespace PocketPlanet
         {
             if (IsIgnited) return;
             IsIgnited = true;
+
+            if (shadowBarrier != null && !shadowBarrier.IsDissolved)
+                shadowBarrier.DissolveBarrier();
 
             PocketPlanetAudio.PlaySfx("shrine_ignite", 1.0f, 1.0f);
             PocketPlanetAudio.PlaySfx("ship_repair_fanfare", 0.9f, 1.0f);

@@ -66,6 +66,7 @@ namespace PocketPlanet.Editor
             atmo.mainCamera = tpCam.GetComponent<Camera>();
             harness.player = pip;
             harness.thirdPersonCamera = tpCam;
+            systemsGo.AddComponent<QuestWaypointCompass>();
 
             // 4. Build Planet 1: "Verdant Haven" (Lush Sculpted Terrain, Waterfall Pond, Forest, Saucers, Captain Astra, Solaris Core & Launchpad)
             ShallowWaterZone shallowPond = BuildPlanet1VerdantHaven(worldRoot.transform, gm, harness, pip);
@@ -252,7 +253,18 @@ namespace PocketPlanet.Editor
             terrainGo.transform.position = new Vector3(-90f, -1.72f, -90f);
 
             Terrain terrainComp = terrainGo.GetComponent<Terrain>();
-            Material grassMat = CreateSolidMaterial("TurquoiseGrassMat", new Color(0.14f, 0.44f, 0.37f), 0.14f);
+            ApplyThreeLayerTerrainSplatmap(
+                td,
+                "Verdant",
+                "Assets/PocketPlanet/Art/Terrain/VerdantCloverGrass.png",
+                "Assets/PocketPlanet/Art/Terrain/VerdantPathDirt.png",
+                "Assets/PocketPlanet/Art/Terrain/VerdantCliffStone.png");
+            Material grassMat = CreateTexturedMaterial(
+                "TurquoiseGrassMat",
+                "Assets/PocketPlanet/Art/Terrain/VerdantCloverGrass.png",
+                new Color(0.86f, 0.96f, 0.92f),
+                0.14f,
+                new Vector2(20f, 20f));
             terrainComp.materialTemplate = grassMat;
 
             // Main lush meadow plateau cylinder in center so footing is 100% crisp and colourful
@@ -266,8 +278,43 @@ namespace PocketPlanet.Editor
 
             // Second layered emerald terrace ring for visual depth
             Material emeraldHillMat = CreateSolidMaterial("EmeraldHillMat", new Color(0.18f, 0.50f, 0.40f), 0.16f);
-            Material lavenderCliffMat = CreateSolidMaterial("LavenderCliffMat", new Color(0.54f, 0.44f, 0.72f), 0.22f);
-            Material pathMat = CreateSolidMaterial("PastelPathMat", new Color(0.76f, 0.58f, 0.44f), 0.18f);
+            Material lavenderCliffMat = CreateTexturedMaterial(
+                "LavenderCliffMat",
+                "Assets/PocketPlanet/Art/Terrain/VerdantCliffStone.png",
+                new Color(0.92f, 0.88f, 0.98f),
+                0.22f,
+                new Vector2(4f, 4f));
+            Material pathMat = CreateTexturedMaterial(
+                "PastelPathMat",
+                "Assets/PocketPlanet/Art/Terrain/VerdantPathDirt.png",
+                new Color(0.96f, 0.90f, 0.84f),
+                0.18f,
+                new Vector2(2.5f, 2.5f));
+
+            // Dense 3D Swaying Meadow Grass & Clover Tuft Carpet across Verdant Haven
+            GameObject grassCarpetRoot = new GameObject("VerdantMeadowGrassCarpet");
+            grassCarpetRoot.transform.SetParent(p1Root.transform, false);
+            UnityEngine.Random.InitState(77);
+            for (int i = 0; i < 52; i++)
+            {
+                float ang = (i / 52f) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.08f, 0.08f);
+                float rad = UnityEngine.Random.Range(3.2f, 19.5f);
+                Vector3 gPos = new Vector3(Mathf.Cos(ang) * rad, 0.01f, Mathf.Sin(ang) * rad);
+                // Keep Pond (-6.2, -6.5) and Launchpad (-7.8, 4.8) clear
+                if (Vector2.Distance(new Vector2(gPos.x, gPos.z), new Vector2(-6.2f, -6.5f)) < 3.8f) continue;
+                if (Vector2.Distance(new Vector2(gPos.x, gPos.z), new Vector2(-7.8f, 4.8f)) < 3.4f) continue;
+
+                float gs = UnityEngine.Random.Range(0.68f, 1.18f);
+                GameObject tuft = SpawnProp(
+                    "GlowingFloraTuft",
+                    gPos,
+                    Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f),
+                    new Vector3(gs, gs * 0.85f, gs),
+                    grassCarpetRoot.transform,
+                    false);
+                tuft.name = $"MeadowGrassPatch_{i}";
+                tuft.AddComponent<ResponsiveFlora>();
+            }
 
             // Warm coral-sand cobblestone pathways connecting Captain Astra, Launchpad, Starlight Ridge, and the 3 zones
             for (int i = 0; i < 9; i++)
@@ -626,15 +673,21 @@ namespace PocketPlanet.Editor
                 gateRoot.AddComponent<SpaceWarpBoostRing>();
             }
 
-            // 4. 28 Drifting 3D Space Asteroids (TripoSpaceAsteroid) flanking the flight corridor
+            // 4. 28 Destructible 3D Space Asteroids (TripoSpaceAsteroid) in and around the flight corridor
             UnityEngine.Random.InitState(108);
             for (int i = 0; i < 28; i++)
             {
-                float z = 225f + i * 12.2f;
+                float z = 228f + i * 12.0f;
                 float side = (i % 2 == 0) ? 1f : -1f;
-                float x = side * UnityEngine.Random.Range(6.5f, 24f) + Mathf.Sin(i * 1.3f) * 3.5f;
-                float y = 85f + UnityEngine.Random.Range(-11f, 12f);
-                float scale = UnityEngine.Random.Range(0.75f, 1.65f);
+                // Place every 3rd asteroid right inside the center target lane so Star-Pulse Lasers shatter them!
+                bool inTargetLane = (i % 3 == 0);
+                float x = inTargetLane
+                    ? side * UnityEngine.Random.Range(1.2f, 4.2f)
+                    : side * UnityEngine.Random.Range(6.5f, 22f) + Mathf.Sin(i * 1.3f) * 3.0f;
+                float y = inTargetLane
+                    ? 85f + UnityEngine.Random.Range(-2.5f, 2.5f)
+                    : 85f + UnityEngine.Random.Range(-11f, 12f);
+                float scale = UnityEngine.Random.Range(0.85f, 1.55f);
 
                 GameObject ast = SpawnProp(
                     "TripoSpaceAsteroid",
@@ -644,10 +697,11 @@ namespace PocketPlanet.Editor
                     spaceRoot.transform,
                     false);
                 ast.name = $"SpaceAsteroid_{i}";
+                ast.AddComponent<DestructibleSpaceAsteroid>();
                 PatrollingSaucerWalker drifter = ast.AddComponent<PatrollingSaucerWalker>();
                 drifter.orbitCenter = ast.transform.position;
-                drifter.orbitRadiusX = 1.2f;
-                drifter.orbitRadiusZ = 1.2f;
+                drifter.orbitRadiusX = inTargetLane ? 0.45f : 1.2f;
+                drifter.orbitRadiusZ = inTargetLane ? 0.45f : 1.2f;
                 drifter.angularSpeed = 0.35f;
                 drifter.spinSpeed = 28f + (i % 5) * 8f;
                 drifter.phaseOffset = i * 0.7f;
@@ -738,8 +792,25 @@ namespace PocketPlanet.Editor
             terrain2Go.transform.SetParent(p2Root.transform, false);
             terrain2Go.transform.position = new Vector3(-90f, -1.72f, 810f);
 
-            Material obsidianGroundMat = CreateSolidMaterial("ObsidianBasaltGroundMat", new Color(0.11f, 0.09f, 0.18f), 0.32f);
-            Material obsidianSanctuaryMat = CreateSolidMaterial("ObsidianSanctuaryStoneMat", new Color(0.16f, 0.12f, 0.26f), 0.42f);
+            ApplyThreeLayerTerrainSplatmap(
+                td2,
+                "Obsidian",
+                "Assets/PocketPlanet/Art/Terrain/ObsidianCrackedBasalt.png",
+                "Assets/PocketPlanet/Art/Terrain/ObsidianRunePath.png",
+                "Assets/PocketPlanet/Art/Terrain/ObsidianRidgeAsh.png");
+
+            Material obsidianGroundMat = CreateTexturedMaterial(
+                "ObsidianBasaltGroundMat",
+                "Assets/PocketPlanet/Art/Terrain/ObsidianCrackedBasalt.png",
+                new Color(0.76f, 0.72f, 0.88f),
+                0.28f,
+                new Vector2(22f, 22f));
+            Material obsidianSanctuaryMat = CreateTexturedMaterial(
+                "ObsidianSanctuaryStoneMat",
+                "Assets/PocketPlanet/Art/Terrain/ObsidianRunePath.png",
+                new Color(0.84f, 0.78f, 0.96f),
+                0.36f,
+                new Vector2(7f, 7f));
             Material violetRuneMat = CreateSolidMaterial("ObsidianVioletRuneMat", new Color(0.58f, 0.26f, 0.92f), 0.72f, new Color(0.32f, 0.12f, 0.56f));
             Material torchFlameMat = CreateSolidMaterial("SanctuaryTorchFlameMat", new Color(1.0f, 0.86f, 0.38f), 0.85f, new Color(1.2f, 0.78f, 0.22f));
             terrain2Go.GetComponent<Terrain>().materialTemplate = obsidianGroundMat;
@@ -752,6 +823,29 @@ namespace PocketPlanet.Editor
             valleyFloor.transform.localScale = new Vector3(54f, 0.50f, 78f);
             valleyFloor.GetComponent<Renderer>().sharedMaterial = obsidianGroundMat;
             ReplaceCylinderColliderWithMeshCollider(valleyFloor);
+
+            // 36 Glowing Violet Crystal-Grass Tufts scattered across the Obsidian Deadwood Valley
+            GameObject darkGrassRoot = new GameObject("ObsidianCrystalGrassCarpet");
+            darkGrassRoot.transform.SetParent(p2Root.transform, false);
+            UnityEngine.Random.InitState(144);
+            for (int i = 0; i < 36; i++)
+            {
+                float ang = (i / 36f) * Mathf.PI * 2f + UnityEngine.Random.Range(-0.1f, 0.1f);
+                float rad = UnityEngine.Random.Range(4.0f, 19.0f);
+                Vector3 gPos = new Vector3(Mathf.Cos(ang) * rad, 0.01f, 896f + Mathf.Sin(ang) * rad * 1.25f);
+                if (Vector2.Distance(new Vector2(gPos.x, gPos.z), new Vector2(-11.5f, 868f)) < 3.6f) continue;
+
+                float gs = UnityEngine.Random.Range(0.65f, 1.12f);
+                GameObject tuft = SpawnProp(
+                    "GlowingFloraTuft",
+                    gPos,
+                    Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f),
+                    new Vector3(gs, gs * 0.82f, gs),
+                    darkGrassRoot.transform,
+                    false);
+                tuft.name = $"ObsidianCrystalGrass_{i}";
+                tuft.AddComponent<ResponsiveFlora>();
+            }
 
             // Northern Obsidian Sanctuary Terrace (gentle raised dais at Z = 924, top at Y = 0.42m)
             GameObject sanctuaryDais = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -798,7 +892,59 @@ namespace PocketPlanet.Editor
                 CreateSteppingStone(p2Root.transform, stonePos, new Vector3(1.65f, 0.08f, 1.65f), (i % 3 == 0) ? violetRuneMat : obsidianSanctuaryMat);
             }
 
-            // 3. Crashed Flying Saucer Wreckage Landmark in the Western Bog (-15.5, 0.05, 892)
+            // 2B. Glowing Violet Shadow-Bog Chasm & Spooky Mushroom Bounce Gauntlet (Z = 896 .. 905)
+            GameObject bogRoot = new GameObject("ObsidianShadowBogGauntlet");
+            bogRoot.transform.SetParent(p2Root.transform, false);
+            Material bogPoolMat = CreateSolidMaterial("ObsidianShadowBogMat", new Color(0.32f, 0.12f, 0.56f), 0.85f, new Color(0.24f, 0.08f, 0.42f));
+            GameObject bogPool = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            bogPool.name = "ShadowBogMistPool";
+            UnityEngine.Object.DestroyImmediate(bogPool.GetComponent<Collider>());
+            bogPool.transform.SetParent(bogRoot.transform, false);
+            bogPool.transform.position = new Vector3(3.2f, 0.02f, 900.5f);
+            bogPool.transform.localScale = new Vector3(11.5f, 0.03f, 8.5f);
+            bogPool.GetComponent<Renderer>().sharedMaterial = bogPoolMat;
+
+            var bogHazard = bogPool.AddComponent<ObsidianBogHazardZone>();
+            bogHazard.safeRespawnPosition = new Vector3(0f, 0.35f, 892.5f);
+            bogHazard.mistRipples = new Transform[3];
+            for (int r = 0; r < 3; r++)
+            {
+                GameObject rip = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                rip.name = $"BogMistRipple_{r}";
+                UnityEngine.Object.DestroyImmediate(rip.GetComponent<Collider>());
+                rip.transform.SetParent(bogRoot.transform, false);
+                rip.transform.position = new Vector3(3.2f + (r - 1) * 1.8f, 0.055f, 900.5f);
+                rip.transform.localScale = new Vector3(2.0f, 0.02f, 2.0f);
+                rip.GetComponent<Renderer>().sharedMaterial = violetRuneMat;
+                bogHazard.mistRipples[r] = rip.transform;
+            }
+
+            // Springy Bouncy Mushrooms leading across the Shadow-Bog Chasm up to the East Chasm Overlook Pylon!
+            Vector3[] bogBouncePositions =
+            {
+                new Vector3(1.8f, 0.04f, 896.8f),
+                new Vector3(4.2f, 0.12f, 899.6f),
+                new Vector3(-4.5f, 0f, 910f),
+            };
+            for (int i = 0; i < bogBouncePositions.Length; i++)
+            {
+                GameObject bmGo = SpawnProp("BouncyShroom", bogBouncePositions[i], Quaternion.Euler(0f, i * 40f, 0f), Vector3.one * 0.95f, bogRoot.transform, false);
+                bmGo.name = $"ObsidianBogBounceShroom_{i}";
+                BouncyMushroom bm = bmGo.AddComponent<BouncyMushroom>();
+                if (i == 0)
+                    harness.planetTwoBogShroom = bm;
+            }
+
+            // Elevated Basalt Overlook Terrace on the east bank of the Shadow-Bog Chasm for Pylon #2
+            GameObject eastOverlook = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            eastOverlook.name = "BogChasmOverlookTerrace";
+            eastOverlook.transform.SetParent(bogRoot.transform, false);
+            eastOverlook.transform.position = new Vector3(6.4f, 0.25f, 902.5f);
+            eastOverlook.transform.localScale = new Vector3(5.4f, 0.30f, 5.4f);
+            eastOverlook.GetComponent<Renderer>().sharedMaterial = obsidianSanctuaryMat;
+            ReplaceCylinderColliderWithMeshCollider(eastOverlook);
+
+            // 3. Crashed Flying Saucer Wreckage Landmark in the Western Bog (-14.5, 0.05, 892)
             SpawnProp(
                 "TripoCrashedSaucer",
                 new Vector3(-14.5f, 0.05f, 892f),
@@ -825,7 +971,7 @@ namespace PocketPlanet.Editor
                 SpawnProp("TripoObsidianRuin", ruinPositions[i], Quaternion.Euler(0f, rotY, 0f), Vector3.one * 0.95f, p2Root.transform, true);
             }
 
-            // 5. Dense Gnarled Deadwood Forest (18 TripoDeadwoodTree instances)
+            // 5. Dense Gnarled Deadwood Forest (16 TripoDeadwoodTree instances)
             Vector3[] deadwoodPositions =
             {
                 new Vector3(-18.5f, 0f, 876f),
@@ -899,15 +1045,11 @@ namespace PocketPlanet.Editor
                 SpawnProp("TripoSpookyMushroom", spookyShroomPositions[i], Quaternion.Euler(0f, i * 49f, 0f), Vector3.one * s, p2Root.transform, false);
             }
 
-            // Also include a Bouncy Jelly-Shroom on Planet 2 near the sanctuary approach
-            GameObject p2Bounce = SpawnProp("BouncyShroom", new Vector3(-4.5f, 0f, 910f), Quaternion.identity, Vector3.one, p2Root.transform, false);
-            p2Bounce.AddComponent<BouncyMushroom>();
-
             // 7. Warden Nyx & The Dying Obsidian Shrine Lantern at the Northern Sanctuary (Z = 922..926)
             GameObject nyxGo = SpawnProp(
                 "TripoNpcNyx",
                 new Vector3(-2.6f, 0.42f, 922.5f),
-                Quaternion.Euler(0f, -20f, 0f),
+                Quaternion.Euler(0f, 35f, 0f),
                 Vector3.one,
                 p2Root.transform,
                 false);
@@ -948,6 +1090,119 @@ namespace PocketPlanet.Editor
 
             gm.obsidianShrine = shrineAltar;
             harness.obsidianShrine = shrineAltar;
+
+            // 7B. Obsidian Shadow-Shield Barrier & 3 Resonant Crystal Pylons Puzzle!
+            GameObject barrierGo = new GameObject("ObsidianShadowBarrier");
+            barrierGo.transform.SetParent(p2Root.transform, false);
+            barrierGo.transform.position = new Vector3(0f, 0.42f, 925.5f);
+            ObsidianShadowBarrier shadowBarrier = barrierGo.AddComponent<ObsidianShadowBarrier>();
+
+            GameObject domeCage = new GameObject("ShadowBarrierCage");
+            domeCage.transform.SetParent(barrierGo.transform, false);
+            domeCage.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            shadowBarrier.barrierDome = domeCage.transform;
+            shadowBarrier.sealRings = new Transform[3];
+            for (int r = 0; r < 3; r++)
+            {
+                GameObject ringRoot = new GameObject($"ShadowSealRing_{r}");
+                ringRoot.transform.SetParent(domeCage.transform, false);
+                ringRoot.transform.localRotation = Quaternion.Euler(22f + r * 32f, r * 45f, 18f);
+                for (int seg = 0; seg < 8; seg++)
+                {
+                    float a = seg * Mathf.PI * 2f / 8f;
+                    GameObject bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    UnityEngine.Object.DestroyImmediate(bar.GetComponent<Collider>());
+                    bar.transform.SetParent(ringRoot.transform, false);
+                    bar.transform.localPosition = new Vector3(Mathf.Cos(a) * 0.52f, 0f, Mathf.Sin(a) * 0.52f);
+                    bar.transform.localRotation = Quaternion.Euler(0f, -a * Mathf.Rad2Deg, 0f);
+                    bar.transform.localScale = new Vector3(0.06f, 0.06f, 0.36f);
+                    bar.GetComponent<Renderer>().sharedMaterial = violetRuneMat;
+                }
+                shadowBarrier.sealRings[r] = ringRoot.transform;
+            }
+
+            shrineAltar.shadowBarrier = shadowBarrier;
+            gm.obsidianShadowBarrier = shadowBarrier;
+
+            Vector3[] pylonPositions =
+            {
+                new Vector3(-7.2f, 0.05f, 885.5f),
+                new Vector3(6.4f, 0.55f, 902.5f),
+                new Vector3(-3.8f, 0.42f, 916.5f),
+            };
+            string[] pylonTitles =
+            {
+                "West Wreckage Crystal Pylon",
+                "Bog Chasm Overlook Pylon",
+                "Sanctuary Gate Crystal Pylon",
+            };
+
+            shadowBarrier.linkedPylons = new ObsidianCrystalPylon[3];
+            gm.obsidianPylons.Clear();
+            harness.obsidianPylons.Clear();
+
+            for (int i = 0; i < 3; i++)
+            {
+                GameObject pylonRoot = new GameObject($"ObsidianCrystalPylon_{i}");
+                pylonRoot.transform.SetParent(p2Root.transform, false);
+                pylonRoot.transform.position = pylonPositions[i];
+
+                GameObject ped = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                ped.name = "PylonRunePedestal";
+                ped.transform.SetParent(pylonRoot.transform, false);
+                ped.transform.localPosition = new Vector3(0f, 0.18f, 0f);
+                ped.transform.localScale = new Vector3(1.55f, 0.18f, 1.55f);
+                ped.GetComponent<Renderer>().sharedMaterial = obsidianSanctuaryMat;
+                ReplaceCylinderColliderWithMeshCollider(ped);
+
+                GameObject crysSpire = SpawnProp(
+                    "TripoObsidianCrystal",
+                    Vector3.up * 0.25f,
+                    Quaternion.Euler(0f, i * 60f, 0f),
+                    Vector3.one * 0.85f,
+                    pylonRoot.transform,
+                    true);
+                crysSpire.transform.localPosition = new Vector3(0f, 0.25f, 0f);
+
+                GameObject ringGo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                ringGo.name = "PylonResonanceHalo";
+                UnityEngine.Object.DestroyImmediate(ringGo.GetComponent<Collider>());
+                ringGo.transform.SetParent(pylonRoot.transform, false);
+                ringGo.transform.localPosition = new Vector3(0f, 2.05f, 0f);
+                ringGo.transform.localScale = new Vector3(1.15f, 0.03f, 1.15f);
+                ringGo.GetComponent<Renderer>().sharedMaterial = violetRuneMat;
+
+                GameObject lGo = new GameObject("PylonLight");
+                lGo.transform.SetParent(pylonRoot.transform, false);
+                lGo.transform.localPosition = new Vector3(0f, 1.85f, 0f);
+                Light pLight = lGo.AddComponent<Light>();
+                pLight.type = LightType.Point;
+                pLight.color = new Color(0.68f, 0.25f, 1.0f);
+                pLight.intensity = 1.05f;
+                pLight.range = 7.5f;
+
+                LineRenderer lr = pylonRoot.AddComponent<LineRenderer>();
+                lr.positionCount = 2;
+                lr.useWorldSpace = true;
+                lr.startWidth = 0.11f;
+                lr.endWidth = 0.08f;
+                lr.sharedMaterial = violetRuneMat;
+                lr.SetPosition(0, pylonPositions[i] + Vector3.up * 2.15f);
+                lr.SetPosition(1, barrierGo.transform.position + Vector3.up * 2.4f);
+
+                ObsidianCrystalPylon pylonComp = pylonRoot.AddComponent<ObsidianCrystalPylon>();
+                pylonComp.pylonIndex = i;
+                pylonComp.pylonTitle = pylonTitles[i];
+                pylonComp.crystalRenderers = crysSpire.GetComponentsInChildren<Renderer>(true);
+                pylonComp.floatingRing = ringGo.transform;
+                pylonComp.pylonLight = pLight;
+                pylonComp.tetherBeam = lr;
+                pylonComp.targetBarrier = shadowBarrier;
+
+                shadowBarrier.linkedPylons[i] = pylonComp;
+                gm.obsidianPylons.Add(pylonComp);
+                harness.obsidianPylons.Add(pylonComp);
+            }
 
             // Ring of 6 Sanctuary Torch Pillars around the Shrine that ignite when the Solaris Core is delivered!
             var torchObjects = new GameObject[6];
@@ -1343,5 +1598,99 @@ namespace PocketPlanet.Editor
             EditorUtility.SetDirty(mat);
             return mat;
         }
+
+        private static Material CreateTexturedMaterial(string name, string textureAssetPath, Color tint, float smoothness, Vector2 tiling, Color? emission = null)
+        {
+            Material mat = CreateSolidMaterial(name, tint, smoothness, emission);
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(textureAssetPath);
+            if (tex != null)
+            {
+                TextureImporter imp = AssetImporter.GetAtPath(textureAssetPath) as TextureImporter;
+                if (imp != null && imp.wrapMode != TextureWrapMode.Repeat)
+                {
+                    imp.wrapMode = TextureWrapMode.Repeat;
+                    imp.filterMode = FilterMode.Bilinear;
+                    imp.SaveAndReimport();
+                    tex = AssetDatabase.LoadAssetAtPath<Texture2D>(textureAssetPath);
+                }
+
+                mat.mainTexture = tex;
+                mat.mainTextureScale = tiling;
+                if (mat.HasProperty("_BaseMap")) mat.SetTexture("_BaseMap", tex);
+                if (mat.HasProperty("_BaseMap_ST")) mat.SetVector("_BaseMap_ST", new Vector4(tiling.x, tiling.y, 0f, 0f));
+                if (mat.HasProperty("_MainTex")) mat.SetTexture("_MainTex", tex);
+                if (mat.HasProperty("_MainTex_ST")) mat.SetVector("_MainTex_ST", new Vector4(tiling.x, tiling.y, 0f, 0f));
+                EditorUtility.SetDirty(mat);
+            }
+            return mat;
+        }
+
+        private static void ApplyThreeLayerTerrainSplatmap(TerrainData td, string prefix, string tex0Path, string tex1Path, string tex2Path)
+        {
+            if (td == null) return;
+            string[] paths = { tex0Path, tex1Path, tex2Path };
+            Vector2[] tileSizes = { new Vector2(8f, 8f), new Vector2(6f, 6f), new Vector2(10f, 10f) };
+            List<TerrainLayer> layers = new List<TerrainLayer>(3);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(paths[i]);
+                if (tex == null) continue;
+                TextureImporter imp = AssetImporter.GetAtPath(paths[i]) as TextureImporter;
+                if (imp != null && imp.wrapMode != TextureWrapMode.Repeat)
+                {
+                    imp.wrapMode = TextureWrapMode.Repeat;
+                    imp.SaveAndReimport();
+                    tex = AssetDatabase.LoadAssetAtPath<Texture2D>(paths[i]);
+                }
+
+                string layerPath = $"Assets/PocketPlanet/Art/Materials/{prefix}_Layer{i}.terrainlayer";
+                TerrainLayer layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(layerPath);
+                if (layer == null)
+                {
+                    layer = new TerrainLayer();
+                    AssetDatabase.CreateAsset(layer, layerPath);
+                }
+                layer.diffuseTexture = tex;
+                layer.tileSize = tileSizes[i];
+                layer.metallic = 0f;
+                layer.smoothness = i == 1 ? 0.12f : 0.22f;
+                EditorUtility.SetDirty(layer);
+                layers.Add(layer);
+            }
+
+            if (layers.Count < 3) return;
+            td.terrainLayers = layers.ToArray();
+
+            int alphaRes = 64;
+            td.alphamapResolution = alphaRes;
+            float[,,] map = new float[alphaRes, alphaRes, 3];
+            for (int y = 0; y < alphaRes; y++)
+            {
+                for (int x = 0; x < alphaRes; x++)
+                {
+                    float u = x / (float)(alphaRes - 1);
+                    float v = y / (float)(alphaRes - 1);
+                    float dx = (u - 0.5f) * 2f;
+                    float dz = (v - 0.5f) * 2f;
+                    float r = Mathf.Sqrt(dx * dx + dz * dz);
+
+                    // Layer 1: Winding path through center & diagonal ridge
+                    float pathBand = Mathf.Exp(-Mathf.Pow(dx - Mathf.Sin(dz * 3.5f) * 0.22f, 2f) * 18f) * Mathf.Clamp01(1.1f - r);
+                    // Layer 2: Outer rocky rim / steep ridges
+                    float cliffRim = Mathf.SmoothStep(0.32f, 0.72f, r);
+                    // Layer 0: Base grass / cracked basalt
+                    float baseGround = Mathf.Max(0.05f, 1f - Mathf.Max(pathBand * 0.85f, cliffRim * 0.85f));
+
+                    float sum = baseGround + pathBand + cliffRim + 0.0001f;
+                    map[y, x, 0] = baseGround / sum;
+                    map[y, x, 1] = pathBand / sum;
+                    map[y, x, 2] = cliffRim / sum;
+                }
+            }
+            td.SetAlphamaps(0, 0, map);
+            EditorUtility.SetDirty(td);
+        }
     }
 }
+

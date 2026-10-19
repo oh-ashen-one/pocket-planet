@@ -35,15 +35,27 @@ namespace PocketPlanet
         private bool _autoFlightActive;
         private Vector2 _autoSteer;
         private bool _autoBoost;
+        private float _laserCooldown;
+        private float _hullShieldPercent = 100f;
+        private int _asteroidsShattered;
+        private Material _laserBoltMaterial;
 
         public float FlightProgress01 => _flightProgress01;
         public float CurrentSpeed => _currentSpeed;
+        public float HullShieldPercent => _hullShieldPercent;
+        public int AsteroidsShatteredCount => _asteroidsShattered;
 
         public void SetAutomatedFlightInput(bool active, Vector2 steer, bool boost)
         {
             _autoFlightActive = active;
             _autoSteer = steer;
             _autoBoost = boost;
+        }
+
+        public void OnAsteroidShattered()
+        {
+            _asteroidsShattered++;
+            _boostRingTimer = Mathf.Max(_boostRingTimer, 0.55f);
         }
 
         private void Awake()
@@ -80,6 +92,7 @@ namespace PocketPlanet
         private void HandleSpaceFlight(float dt)
         {
             var kb = Keyboard.current;
+            var mouse = Mouse.current;
             var pad = Gamepad.current;
 
             float steerX = 0f;
@@ -96,7 +109,7 @@ namespace PocketPlanet
                 {
                     if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) steerX -= 1f;
                     if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) steerX += 1f;
-                    if (kb.wKey.isPressed || kb.upArrowKey.isPressed || kb.spaceKey.isPressed) steerY += 1f;
+                    if (kb.wKey.isPressed || kb.upArrowKey.isPressed) steerY += 1f;
                     if (kb.sKey.isPressed || kb.downArrowKey.isPressed || kb.leftCtrlKey.isPressed) steerY -= 1f;
                 }
                 if (Mathf.Abs(steerX) < 0.01f) steerX = Input.GetAxisRaw("Horizontal");
@@ -122,6 +135,27 @@ namespace PocketPlanet
             if (_boostRingTimer > 0f)
                 _boostRingTimer -= dt;
 
+            if (_hullShieldPercent < 100f)
+                _hullShieldPercent = Mathf.Min(100f, _hullShieldPercent + dt * 8.5f);
+
+            // Star-Pulse Blaster laser firing ([F], [Space], Left Click, Gamepad West, or Automated Flight)
+            if (_laserCooldown > 0f)
+                _laserCooldown -= dt;
+
+            bool firePressed = _autoFlightActive
+                || Input.GetKey(KeyCode.F)
+                || Input.GetKey(KeyCode.Space)
+                || Input.GetMouseButton(0)
+                || (kb != null && (kb.fKey.isPressed || kb.spaceKey.isPressed))
+                || (mouse != null && mouse.leftButton.isPressed)
+                || (pad != null && (pad.buttonWest.isPressed || pad.rightShoulder.isPressed));
+
+            if (firePressed && _laserCooldown <= 0f)
+            {
+                _laserCooldown = _autoFlightActive ? 0.34f : 0.20f;
+                FireStarPulseBlaster();
+            }
+
             float targetSpeed = boosting ? boostFlightSpeed : baseFlightSpeed;
             _currentSpeed = Mathf.Lerp(_currentSpeed, targetSpeed, dt * 5.5f);
 
@@ -136,6 +170,21 @@ namespace PocketPlanet
             _pitchAngle = Mathf.Lerp(_pitchAngle, -steerY * 18f + (boosting ? 8f : 3f), dt * 7f);
             float forwardYaw = FlyingTowardPlanetTwo ? 0f : 180f;
             transform.rotation = Quaternion.Euler(_pitchAngle, forwardYaw + steerX * 14f, _rollAngle);
+
+            // Check asteroid proximity for direct hull impact or boost ramming
+            var asteroids = DestructibleSpaceAsteroid.ActiveAsteroids;
+            for (int i = asteroids.Count - 1; i >= 0; i--)
+            {
+                var ast = asteroids[i];
+                if (ast == null || ast.IsShattered) continue;
+                float d = Vector3.Distance(pos, ast.transform.position);
+                if (d <= 3.8f)
+                {
+                    if (!boosting)
+                        _hullShieldPercent = Mathf.Max(25f, _hullShieldPercent - 12f);
+                    ast.ShatterAsteroid(this);
+                }
+            }
 
             // Keep Pip synced inside the saucer so zone tracking works seamlessly
             var gm = PocketPlanetGameManager.Instance;
@@ -167,6 +216,72 @@ namespace PocketPlanet
             {
                 CompleteSpaceFlightAndLand(FlyingTowardPlanetTwo);
             }
+        }
+
+        public void FireStarPulseBlaster()
+        {
+            PocketPlanetAudio.PlaySfx("saucer_laser", 0.72f, Random.Range(0.95f, 1.08f));
+
+            if (_laserBoltMaterial == null)
+            {
+                Shader sh = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                _laserBoltMaterial = new Material(sh);
+                Color col = new Color(0.28f, 0.96f, 1.0f);
+                if (_laserBoltMaterial.HasProperty("_BaseColor")) _laserBoltMaterial.SetColor("_BaseColor", col);
+                if (_laserBoltMaterial.HasProperty("_Color")) _laserBoltMaterial.SetColor("_Color", col);
+                if (_laserBoltMaterial.HasProperty("_EmissionColor"))
+                {
+                    _laserBoltMaterial.EnableKeyword("_EMISSION");
+                    _laserBoltMaterial.SetColor("_EmissionColor", new Color(0.35f, 0.95f, 1.0f) * 3.0f);
+                }
+            }
+
+            Vector3 fwd = FlyingTowardPlanetTwo ? Vector3.forward : Vector3.back;
+            DestructibleSpaceAsteroid bestTarget = FindForwardAsteroidTarget(fwd);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                GameObject bolt = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                bolt.name = "StarPulseLaserBolt";
+                bolt.transform.position = transform.position + transform.right * (side * 1.15f) + fwd * 1.8f;
+                bolt.transform.localScale = new Vector3(0.22f, 0.95f, 0.22f);
+                var col = bolt.GetComponent<Collider>();
+                if (col != null) Destroy(col);
+                var mr = bolt.GetComponent<MeshRenderer>();
+                if (mr != null) mr.sharedMaterial = _laserBoltMaterial;
+
+                var lb = bolt.AddComponent<SaucerLaserBolt>();
+                lb.ownerSaucer = this;
+                lb.homingTarget = bestTarget;
+                Vector3 aimDir = bestTarget != null
+                    ? (bestTarget.transform.position - bolt.transform.position).normalized
+                    : transform.forward;
+                lb.velocity = aimDir * 96f;
+            }
+        }
+
+        private DestructibleSpaceAsteroid FindForwardAsteroidTarget(Vector3 fwd)
+        {
+            DestructibleSpaceAsteroid best = null;
+            float bestScore = float.MaxValue;
+            var asteroids = DestructibleSpaceAsteroid.ActiveAsteroids;
+            for (int i = 0; i < asteroids.Count; i++)
+            {
+                var ast = asteroids[i];
+                if (ast == null || ast.IsShattered) continue;
+                Vector3 toAst = ast.transform.position - transform.position;
+                float forwardDist = Vector3.Dot(toAst, fwd);
+                if (forwardDist < 3f || forwardDist > 95f) continue;
+                float lateralDist = Vector3.Cross(fwd, toAst).magnitude;
+                if (lateralDist > 26f) continue;
+                float score = forwardDist + lateralDist * 1.5f;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = ast;
+                }
+            }
+            return best;
         }
 
         public void TriggerWarpRingBoost()

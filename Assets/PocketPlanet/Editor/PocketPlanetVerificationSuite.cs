@@ -54,10 +54,10 @@ namespace PocketPlanet.Editor
                     errors.Add($"Missing prop prefab: Resources/Props/{p}");
             }
 
-            // 3. Verify all 26 synthesized audio clips exist in Resources/Audio
+            // 3. Verify all 30 synthesized audio clips exist in Resources/Audio
             AudioClip[] audioClips = Resources.LoadAll<AudioClip>("Audio");
-            if (audioClips == null || audioClips.Length < 24)
-                errors.Add($"Expected >=24 audio clips in Resources/Audio, found {(audioClips != null ? audioClips.Length : 0)}");
+            if (audioClips == null || audioClips.Length < 30)
+                errors.Add($"Expected >=30 audio clips in Resources/Audio, found {(audioClips != null ? audioClips.Length : 0)}");
 
             // 4. Open PocketPlanet.unity scene and verify all core & two-planet gameplay components are wired
             EditorSceneManager.OpenScene("Assets/PocketPlanet/Scenes/PocketPlanet.unity", OpenSceneMode.Single);
@@ -73,6 +73,10 @@ namespace PocketPlanet.Editor
                 errors.Add("Scene missing SpaceshipFlightController");
             if (Object.FindFirstObjectByType<ObsidianShrineAltar>() == null)
                 errors.Add("Scene missing ObsidianShrineAltar");
+            if (Object.FindFirstObjectByType<ObsidianShadowBarrier>() == null)
+                errors.Add("Scene missing ObsidianShadowBarrier");
+            if (Object.FindFirstObjectByType<QuestWaypointCompass>() == null)
+                errors.Add("Scene missing QuestWaypointCompass");
 
             NpcCharacterDialogue[] npcs = Object.FindObjectsByType<NpcCharacterDialogue>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             if (npcs.Length < 2)
@@ -81,6 +85,14 @@ namespace PocketPlanet.Editor
             SpaceWarpBoostRing[] rings = Object.FindObjectsByType<SpaceWarpBoostRing>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             if (rings.Length < 4)
                 errors.Add($"Scene expected >=4 SpaceWarpBoostRing instances in space corridor, found {rings.Length}");
+
+            ObsidianCrystalPylon[] pylons = Object.FindObjectsByType<ObsidianCrystalPylon>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (pylons.Length < 3)
+                errors.Add($"Scene expected >=3 ObsidianCrystalPylon instances on Planet 2, found {pylons.Length}");
+
+            DestructibleSpaceAsteroid[] asteroids = Object.FindObjectsByType<DestructibleSpaceAsteroid>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (asteroids.Length < 15)
+                errors.Add($"Scene expected >=15 DestructibleSpaceAsteroid instances in space corridor, found {asteroids.Length}");
 
             if (errors.Count > 0)
             {
@@ -91,7 +103,7 @@ namespace PocketPlanet.Editor
             }
             else
             {
-                Debug.Log("[PocketPlanetVerificationSuite] ALL CHECKS PASSED (PipHero 22-bone rig, 12 clips, 28 prop prefabs including 14 Tripo 3D assets, 26 audio clips, Two-Planet + 3D Space Flight quest systems).");
+                Debug.Log("[PocketPlanetVerificationSuite] ALL CHECKS PASSED (PipHero 22-bone rig, 12 clips, 28 prop prefabs including 14 Tripo 3D assets, 30 audio clips, Two-Planet + 3D Space Flight + Pylon Barrier + Asteroid Blaster + 3D Compass systems).");
                 if (Application.isBatchMode)
                     EditorApplication.Exit(0);
             }
