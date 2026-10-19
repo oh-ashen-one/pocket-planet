@@ -1,6 +1,11 @@
 # Pocket Planet: Two-World & 3D Space Flight Adventure
 
-**Pocket Planet** is an original, cute, fully playable third-person 3D exploration, platforming, and interplanetary space-flight game built in **Unity 6 (`6000.3.20f1`)** with a complete **Concept Art → Tripo 3D Studio (`H3.1 – Best Quality`) & Customuse MCP 3D Generation → Blender 5.2 Cleanup, Rigging & 12-Clip Animation → Unity 6** pipeline.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Assets: CC BY 4.0](https://img.shields.io/badge/Assets-CC%20BY%204.0-brightgreen.svg)](ASSET_LICENSES.md)
+[![Engine: Unity 6000.3.20f1](https://img.shields.io/badge/Unity-6000.3.20f1%20LTS-black?logo=unity)](https://unity.com/)
+[![3D Pipeline: Blender 5.2 + Tripo 3D H3.1](https://img.shields.io/badge/3D%20Pipeline-Blender%205.2%20%2B%20Tripo%203D%20H3.1-orange?logo=blender)](CREDITS.md)
+
+**Pocket Planet** is an open-source, cute third-person **3D exploration, platforming, and interplanetary space-flight adventure** built in **Unity 6 (`6000.3.20f1`)** with a fully reproducible **Concept Art → Tripo 3D Studio (`H3.1 – Best Quality`) & Customuse MCP 3D Generation → Blender 5.2 Cleanup, 22-Bone Rigging & 12-Clip Animation → Unity 6** pipeline.
 
 You play as **Pip**, a small rounded mint-teal alien explorer with expressive glossy eyes, floppy glowing-tipped antennae, oversized coral boots, and a mustard-yellow star backpack.
 
@@ -77,26 +82,62 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
 ## Controls (Keyboard/Mouse & Gamepad via Unity Input System)
 
 ### On-Foot Exploration Controls (Pip)
-| Action | Keyboard / Mouse | Gamepad (DualSense / Xbox) |
+| Action | Keyboard / Mouse / Trackpad | Gamepad (DualSense / Xbox) |
 | :--- | :--- | :--- |
 | **Move** | `W`, `A`, `S`, `D` or `Arrow Keys` | `Left Stick` |
+| **Look / Orbit Camera** | **Move Mouse or Trackpad** (Click window to lock 360° cursor; `Esc` to unlock, `[` / `]` to orbit) | `Right Stick` |
+| **Zoom Camera** | `Mouse Scroll Wheel` / Two-Finger Scroll | — |
 | **Run / Sprint** | Hold `Left Shift` / `Right Shift` | Hold `L1 / LB` or `R2 / RT` |
 | **Jump** (Coyote Time + Jump Buffer) | `Space` | `South Button` (`Cross` / `A`) |
-| **Interact / Talk / Pick Up Core / Attune Pylon / Board Saucer / Ignite Shrine** | `E` or `F` | `West Button` (`Square` / `X`) |
+| **Interact / Talk / Pick Up Core / Attune Pylon / Board Saucer / Ignite Shrine** | `E`, `F`, or `Enter` | `West Button` (`Square` / `X`) |
 | **Throw / Drop Carried Starberry** | `Q`, `R`, or `Left Mouse Click` | `East Button` (`Circle` / `B`) |
-| **Orbit Camera** | Hold `Right Mouse Button` + Move Mouse, or `Q` / `E` | `Right Stick` |
-| **Zoom Camera** | `Mouse Scroll Wheel` | — |
 | **Toggle Controls Overlay** | `H` or `Tab` | — |
 
 ### 3D Flying Saucer Controls (In Space Flight)
-| Action | Keyboard / Mouse | Gamepad (DualSense / Xbox) |
+| Action | Keyboard / Mouse / Trackpad | Gamepad (DualSense / Xbox) |
 | :--- | :--- | :--- |
-| **Steer Left / Right & Pitch Up / Down** | `W`, `A`, `S`, `D` or `Arrow Keys` | `Left Stick` |
+| **Steer Left / Right & Pitch Up / Down** | `W`, `A`, `S`, `D`, `Arrow Keys`, or **Move Mouse / Trackpad** | `Left Stick` |
 | **Fire Star-Pulse Blaster (Shatter Crystal Meteors)** | `Space`, `F`, `E`, or `Left Mouse Click` | `West Button` (`Square` / `X`) or `R1 / RB` |
 | **Hyper-Boost Thrusters** | Hold `Left Shift` | Hold `South Button` (`A` / `Cross`) or `R2 / RT` |
 | **Quick-Warp to Destination Planet Landing Pad** | Press `G` | — |
 | **Keep Exploring (Post-Victory)** | `C` or On-Screen Button | On-Screen Button |
-| **Restart Adventure** | `Backspace` or On-Screen Button | On-Screen Button |
+| **Restart Adventure** | `P` / `Backspace` or On-Screen Button | On-Screen Button |
+
+---
+
+## Repository Structure
+
+```text
+pocket-planet/
+├── Assets/PocketPlanet/
+│   ├── Art/
+│   │   ├── Characters/Pip/         # Rigged Hero Pip FBX, 2K albedo & 12 skeletal animation FBXs
+│   │   ├── Props/                  # 14 Tripo 3D H3.1 FBXs + 14 modular & Customuse prop FBXs
+│   │   └── Terrain/                # Procedural 3-layer splatmap textures for both planets
+│   ├── Editor/
+│   │   ├── PocketPlanetSceneBuilder.cs       # Deterministic one-click scene, terrain & prefab builder
+│   │   └── PocketPlanetVerificationSuite.cs  # Automated batch verification & asset/rig audit
+│   ├── Resources/
+│   │   ├── Audio/                  # 26 synthesized 16-bit PCM .wav SFX & 2 planetary BGM tracks
+│   │   ├── Characters/             # Runtime PipHero prefab
+│   │   └── Props/                  # 28 runtime interactive & environment prefabs
+│   ├── Scenes/
+│   │   └── PocketPlanet.unity      # Complete Two-Planet + 3D Space Flight Corridor scene
+│   └── Scripts/                    # All gameplay, camera, physics, space-flight, NPC & UI scripts
+├── docs/
+│   ├── concepts/                   # Pre-production concept art reference sheets
+│   ├── screenshots/                # Live in-engine gameplay screenshots & perf JSON metrics
+│   └── gameplay_showcase.mp4       # Continuous live gameplay showcase video with audio
+├── tools/
+│   ├── blender_rig_hero.py         # Blender 5.2 hero cleanup, 22-bone armature & 12-clip exporter
+│   ├── blender_build_world_assets.py # Blender 5.2 modular interactive prop generator
+│   ├── blender_build_tripo_assets.py # Blender 5.2 Tripo 3D H3.1 mesh cleanup & FBX exporter
+│   ├── generate_audio.py           # Pure-Python procedural WAV audio synthesizer
+│   └── generate_terrain_textures.py # Procedural terrain splatmap texture generator
+├── ASSET_LICENSES.md               # Asset licensing overview (MIT code + CC BY 4.0 assets)
+├── CREDITS.md                      # Detailed per-asset provenance & generation ledger
+└── LICENSE                         # MIT License
+```
 
 ---
 
@@ -112,8 +153,12 @@ You play as **Pip**, a small rounded mint-teal alien explorer with expressive gl
   - **Blender**: `5.2.0 LTS` (`/Applications/Blender.app/Contents/MacOS/Blender`)
   - **Python 3**: For regenerating the 26 synthesized PCM `.wav` sound effects and background music tracks (`tools/generate_audio.py`)
 
-### 1. Open and Play in Unity Editor
-1. Open the `/Users/midir/pocket-planet` project folder in **Unity Hub** using **Unity `6000.3.20f1`**.
+### 1. Clone & Open in Unity Editor
+```bash
+git clone https://github.com/oh-ashen-one/pocket-planet.git
+cd pocket-planet
+```
+1. Open the cloned `pocket-planet` folder in **Unity Hub** using **Unity `6000.3.20f1`**.
 2. Open the main scene at [`Assets/PocketPlanet/Scenes/PocketPlanet.unity`](Assets/PocketPlanet/Scenes/PocketPlanet.unity).
 3. Press **Play** in the Editor (or use the top menu **`PocketPlanet -> Build Complete Scene & Configure Build Settings`** to rebuild both planets, the space corridor, and all 28 prefabs from scratch).
 
@@ -131,30 +176,29 @@ python3 tools/generate_audio.py
 # 4. Import all assets, build prefabs, assemble PocketPlanet.unity scene, and compile Builds/PocketPlanet.app
 /Applications/Unity/Hub/Editor/6000.3.20f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -nographics -quit \
-  -projectPath /Users/midir/pocket-planet \
+  -projectPath "$(pwd)" \
   -executeMethod PocketPlanet.Editor.PocketPlanetSceneBuilder.BuildAllBatch \
   -logFile Logs/unity_build.log
 
-# 5. Run the automated batch verification suite (verifies rig, 12 clips, 28 prefabs including 14 Tripo 3D assets, 26 audio clips, and Two-Planet + Space Flight systems)
+# 5. Run the automated batch verification suite
 /Applications/Unity/Hub/Editor/6000.3.20f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -nographics -quit \
-  -projectPath /Users/midir/pocket-planet \
+  -projectPath "$(pwd)" \
   -executeMethod PocketPlanet.Editor.PocketPlanetVerificationSuite.RunBatchVerification \
   -logFile Logs/unity_verify.log
 ```
 
 ### 3. Launch the Built macOS Standalone Game (`Builds/PocketPlanet.app`)
 ```bash
-# Interactive Play Mode
-open /Users/midir/pocket-planet/Builds/PocketPlanet.app
+# Interactive Play Mode (Windowed 1440x900)
+open -a "$(pwd)/Builds/PocketPlanet.app" --args -screen-width 1440 -screen-height 900 -screen-fullscreen 0
 
-# Automated Full Interplanetary Adventure Playtest & Screenshot/Video Capture (via gpu_slot.sh)
-/Users/midir/.config/devin/brain/sources/oh-ashen-one--claude-code-game-builder/71a17f95997685bca77f5208a35d22356b0f71c9/tools/gpu/gpu_slot.sh capture \
-  --label pocket-planet-playtest -- \
-  /Users/midir/pocket-planet/Builds/PocketPlanet.app/Contents/MacOS/pocket-planet \
+# Automated Full Interplanetary Adventure Playtest & Screenshot/Video Capture
+"$(pwd)/Builds/PocketPlanet.app/Contents/MacOS/pocket-planet" \
+  -screen-width 1440 -screen-height 900 -screen-fullscreen 0 \
   -pocketMode full \
-  -pocketCaptureDir /Users/midir/pocket-planet/docs/screenshots/gameplay \
-  -pocketPerfJson /Users/midir/pocket-planet/docs/performance_metrics.json
+  -pocketCaptureDir "$(pwd)/docs/screenshots/gameplay" \
+  -pocketPerfJson "$(pwd)/docs/performance_metrics.json"
 ```
 
 ---
